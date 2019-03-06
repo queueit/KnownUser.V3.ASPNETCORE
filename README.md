@@ -1,5 +1,5 @@
 >You can find the latest released version [here](https://github.com/queueit/KnownUser.V3.ASPNETCORE/releases/latest).
->Download latest version from here: TBA
+>Download latest version from here: **TBA**
 
 # Queue-it KnownUser SDK for ASP.NET Core
 The Queue-it Security Framework is used to ensure that end users cannot bypass the queue by adding a server-side integration to your server. It supports ASP.NET Core 2.0.2.
@@ -48,8 +48,77 @@ The KnownUser validation must be done on *all requests except requests for stati
 So, if you add the KnownUser validation logic to a central place like in Startup.cs, then be sure that the Triggers only fire on page requests (including ajax requests) and not on e.g. image.
 
 The following method is all that is needed to validate that a user has been through the queue:
+
+*Startup.cs*
 ```
-TBA
+...
+public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+    ...
+
+    app.Use(async(context, next)=> {
+        KnownUserV3.SDK.SDKInitializer.SetHttpContext(context);
+        if (KnownUserValidator.DoValidation(context))
+        {
+            await next.Invoke();
+        }
+    });
+    app.UseMvc();
+}
+...
+```
+
+*KnownUserValidator.cs*
+```
+public class KnownUserValidator
+{
+   public static bool DoValidation(HttpContext context)
+   {
+      try
+      {
+          var customerId = "Your Queue-it customer ID";
+          var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
+
+          var requestUrl = $"{context.Request.Scheme}://{context.Request.Host}{context.Request.Path}{context.Request.QueryString}";
+          var queueitToken = context.Request.Query[KnownUser.QueueITTokenKey];
+          var pureUrl = Regex.Replace(requestUrl, @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
+
+          var integrationConfig = IntegrationConfigProvider.GetIntegrationConfigFromFile(customerId, "integrationconfiguration.json"); // use file directly
+          //var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfigFromServer(customerId); // download and cache using polling
+
+          //Verify if the user has been through the queue
+          var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken, integrationConfig, customerId, secretKey);
+
+          if (validationResult.DoRedirect)
+          {
+               context.Response.Headers.Add("Cache-Control", "no-cache, no-store");
+               context.Response.Headers.Add("Expires", "-1");
+
+               //Send the user to the queue - either becuase hash was missing or becuase is was invalid
+               context.Response.Redirect(validationResult.RedirectUrl);
+               return false;
+          }
+          else
+          {
+               //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
+               //if there was a match 
+               if (requestUrl.Contains(KnownUser.QueueITTokenKey) && !string.IsNullOrEmpty(validationResult.ActionType))
+               {
+                   context.Response.Redirect(pureUrl);
+                   return false;
+               }
+          }
+          return true;
+       }
+       catch (Exception ex)
+       {
+           return true;
+           //There was an error validationg the request
+           //Use your own logging framework to log the Exception
+           //This was a configuration exception, so we let the user continue
+       }
+   }
+}
 ```
 
 ## Alternative Implementation
