@@ -83,8 +83,7 @@ public class KnownUserValidator
           var queueitToken = context.Request.Query[KnownUser.QueueITTokenKey];
           var pureUrl = Regex.Replace(requestUrl, @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
 
-          var integrationConfig = IntegrationConfigProvider.GetIntegrationConfigFromFile(customerId, "integrationconfiguration.json"); // use file directly
-          //var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfigFromServer(customerId); // download and cache using polling
+          var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId); // download and cache using polling
 
           //Verify if the user has been through the queue
           var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken, integrationConfig, customerId, secretKey);
@@ -134,8 +133,65 @@ If your application server (maybe due to security reasons) is not allowed to do 
 The following is an example of how to specify the configuration in code:
  
 ```
-TBA
+public class KnownUserValidator
+{
+   public static bool DoValidation(HttpContext context)
+   {
+      try
+      {
+          var customerId = "Your Queue-it customer ID";
+          var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
+
+          var requestUrl = $"{context.Request.Scheme}://{context.Request.Host}{context.Request.Path}{context.Request.QueryString}";
+          var queueitToken = context.Request.Query[KnownUser.QueueITTokenKey];
+          var pureUrl = Regex.Replace(requestUrl, @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
+
+          var eventConfig = new QueueEventConfig()
+          {
+              EventId = "event1", //ID of the queue to use
+              CookieDomain = ".mydomain.com", //Optional - Domain name where the Queue-it session cookie should be saved. Default is to save on the domain of the request
+              QueueDomain = "queue.mydomain.com", //Optional - Domian name of the queue. Default is [CustomerId].queue-it.net
+              CookieValidityMinute = 15, //Optional - Validity of the Queue-it session cookie. Default is 10 minutes
+              ExtendCookieValidity = false, //Optional - Should the Queue-it session cookie validity time be extended each time the validation runs? Default is true.
+              Culture = "en-US", //Optional - Culture of the queue ticket layout in the format specified here: https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx Default is to use what is specified on Event
+              LayoutName = "MyCustomLayoutName" //Optional - Name of the queue ticket layout - e.g. "Default layout by Queue-it". Default is to use what is specified on the Event
+          };
+
+          //Verify if the user has been through the queue
+          var validationResult = KnownUser.ResolveQueueRequestByLocalConfig(pureUrl, queueitToken, eventConfig, customerId, secretKey);
+
+          if (validationResult.DoRedirect)
+          {
+               context.Response.Headers.Add("Cache-Control", "no-cache, no-store");
+               context.Response.Headers.Add("Expires", "-1");
+
+               //Send the user to the queue - either becuase hash was missing or becuase is was invalid
+               context.Response.Redirect(validationResult.RedirectUrl);
+               return false;
+          }
+          else
+          {
+               //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
+               //if there was a match 
+               if (requestUrl.Contains(KnownUser.QueueITTokenKey) && !string.IsNullOrEmpty(validationResult.ActionType))
+               {
+                   context.Response.Redirect(pureUrl);
+                   return false;
+               }
+          }
+          return true;
+       }
+       catch (Exception ex)
+       {
+           return true;
+           //There was an error validationg the request
+           //Use your own logging framework to log the Exception
+           //This was a configuration exception, so we let the user continue
+       }
+   }
+}
 ```
+
 ### Protecting ajax calls on static pages
 If you have some static html pages (might be behind cache servers) and you have some ajax calls from those pages needed to be protected by KnownUser library you need to follow these steps:
 1) You are using v.3.5.1 (or later) of the KnownUser library.
@@ -154,5 +210,58 @@ If you have some static html pages (might be behind cache servers) and you have 
 4) Use the following method to protect all dynamic calls (including dynamic pages and ajax calls).
 
 ```
-TBA
+public class KnownUserValidator
+{
+   public static bool DoValidation(HttpContext context)
+   {
+      try
+      {
+          var customerId = "Your Queue-it customer ID";
+          var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
+
+          var requestUrl = $"{context.Request.Scheme}://{context.Request.Host}{context.Request.Path}{context.Request.QueryString}";
+          var queueitToken = context.Request.Query[KnownUser.QueueITTokenKey];
+          var pureUrl = Regex.Replace(requestUrl, @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
+
+          var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId); // download and cache using polling
+
+          //Verify if the user has been through the queue
+          var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken, integrationConfig, customerId, secretKey);
+
+          if (validationResult.DoRedirect)
+          {
+               context.Response.Headers.Add("Cache-Control", "no-cache, no-store");
+               context.Response.Headers.Add("Expires", "-1");
+
+               if (validationResult.IsAjaxResult)
+               {
+                   context.Response.Headers.Add(validationResult.AjaxQueueRedirectHeaderKey, validationResult.AjaxRedirectUrl);
+                   return false;
+               }
+
+               //Send the user to the queue - either becuase hash was missing or becuase is was invalid
+               context.Response.Redirect(validationResult.RedirectUrl);
+               return false;
+          }
+          else
+          {
+               //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
+               //if there was a match 
+               if (requestUrl.Contains(KnownUser.QueueITTokenKey) && !string.IsNullOrEmpty(validationResult.ActionType))
+               {
+                   context.Response.Redirect(pureUrl);
+                   return false;
+               }
+          }
+          return true;
+       }
+       catch (Exception ex)
+       {
+           return true;
+           //There was an error validationg the request
+           //Use your own logging framework to log the Exception
+           //This was a configuration exception, so we let the user continue
+       }
+   }
+}
 ```
