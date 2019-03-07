@@ -5,6 +5,7 @@
     <Version>3.5.1</Version>
     <Authors>queueit</Authors>
     <Company>queueit</Company>
+    <Description>The Queue-it Security Framework is used to ensure that end users cannot bypass the queue by adding a server-side integration to your server.</Description>
   </PropertyGroup>
 
   <ItemGroup>
