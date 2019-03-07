@@ -1,5 +1,5 @@
 >You can find the latest released version [here](https://github.com/queueit/KnownUser.V3.ASPNETCORE/releases/latest).
->Download latest version from here: **TBA**
+>Download latest version from here: [![NuGet](http://img.shields.io/nuget/v/QueueIT.KnownUser.V3.AspNetCore.svg)](https://www.nuget.org/packages/QueueIT.KnownUser.V3.AspNetCore/)
 
 # Queue-it KnownUser SDK for ASP.NET Core
 The Queue-it Security Framework is used to ensure that end users cannot bypass the queue by adding a server-side integration to your server. It supports ASP.NET Core 2.0+.
