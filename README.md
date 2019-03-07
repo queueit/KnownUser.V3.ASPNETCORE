@@ -2,7 +2,7 @@
 >Download latest version from here: **TBA**
 
 # Queue-it KnownUser SDK for ASP.NET Core
-The Queue-it Security Framework is used to ensure that end users cannot bypass the queue by adding a server-side integration to your server. It supports ASP.NET Core 2.0.2.
+The Queue-it Security Framework is used to ensure that end users cannot bypass the queue by adding a server-side integration to your server. It supports ASP.NET Core 2.0+.
 ## Introduction
 When a user is redirected back from the queue to your website, the queue engine can attach a query string parameter (`queueittoken`) containing some information about the user. 
 The most important fields of the `queueittoken` are:
@@ -57,7 +57,7 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env)
     ...
 
     app.Use(async(context, next)=> {
-        KnownUserV3.SDK.SDKInitializer.SetHttpContext(context);
+        QueueIT.KnownUser.V3.AspNetCore.SDKInitializer.SetHttpContext(context);
         if (KnownUserValidator.DoValidation(context))
         {
             await next.Invoke();
