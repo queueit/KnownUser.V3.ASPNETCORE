@@ -3,9 +3,9 @@ using System;
 using System.Collections.Specialized;
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("QueueIT.KnownUserV3.SDK.Tests")]
+[assembly: InternalsVisibleTo("QueueIT.KnownUser.V3.AspNetCore.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
-namespace QueueIT.KnownUserV3.SDK
+namespace QueueIT.KnownUser.V3.AspNetCore
 {
     public class SDKInitializer
     {

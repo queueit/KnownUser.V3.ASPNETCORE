@@ -1,7 +1,7 @@
 ﻿using System;
 using Xunit;
 
-namespace QueueIT.KnownUserV3.SDK.Tests
+namespace QueueIT.KnownUser.V3.AspNetCore.Tests
 {
     public class UrlParameterProviderTest
     {

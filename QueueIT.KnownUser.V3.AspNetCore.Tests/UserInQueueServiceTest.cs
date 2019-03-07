@@ -1,5 +1,5 @@
 ﻿using NSubstitute;
-using QueueIT.KnownUserV3.SDK.IntegrationConfig;
+using QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using Xunit;
 
-namespace QueueIT.KnownUserV3.SDK.Tests
+namespace QueueIT.KnownUser.V3.AspNetCore.Tests
 {
     public class UserInQueueServiceTest
     {

@@ -3,7 +3,7 @@ using System.Collections.Specialized;
 using System.Web;
 using Xunit;
 
-namespace QueueIT.KnownUserV3.SDK.Tests
+namespace QueueIT.KnownUser.V3.AspNetCore.Tests
 {
     public class UserInQueueStateCookieRepositoryTest
     {

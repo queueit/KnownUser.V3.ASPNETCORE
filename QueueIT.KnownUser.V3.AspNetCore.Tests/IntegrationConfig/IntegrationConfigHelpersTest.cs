@@ -1,10 +1,10 @@
-﻿using QueueIT.KnownUserV3.SDK.IntegrationConfig;
+﻿using QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using Xunit;
 
-namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
+namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
 {
     public class ComparisonOperatorHelperTest
     {

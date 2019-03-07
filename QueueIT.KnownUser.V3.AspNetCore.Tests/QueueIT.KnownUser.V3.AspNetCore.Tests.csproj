@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\QueueIT.KnownUserV3.SDK\QueueIT.KnownUserV3.SDK.csproj" />
+    <ProjectReference Include="..\QueueIT.KnownUser.V3.AspNetCore\QueueIT.KnownUser.V3.AspNetCore.csproj" />
   </ItemGroup>
 
 </Project>

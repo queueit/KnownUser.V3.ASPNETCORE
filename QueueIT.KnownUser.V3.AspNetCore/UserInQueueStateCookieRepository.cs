@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Specialized;
 
-namespace QueueIT.KnownUserV3.SDK
+namespace QueueIT.KnownUser.V3.AspNetCore
 {
     internal interface IUserInQueueStateRepository
     {

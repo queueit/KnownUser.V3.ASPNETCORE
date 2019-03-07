@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web;
 
-namespace QueueIT.KnownUserV3.SDK
+namespace QueueIT.KnownUser.V3.AspNetCore
 {
     internal class QueueParameterHelper
     {

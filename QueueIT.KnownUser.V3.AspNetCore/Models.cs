@@ -1,6 +1,6 @@
 ﻿using System.Web;
 
-namespace QueueIT.KnownUserV3.SDK
+namespace QueueIT.KnownUser.V3.AspNetCore
 {
     public class RequestValidationResult
     {

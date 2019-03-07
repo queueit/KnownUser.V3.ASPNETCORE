@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2037
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueueIT.KnownUserV3.SDK", "QueueIT.KnownUserV3.SDK\QueueIT.KnownUserV3.SDK.csproj", "{370A3272-63DD-4A17-9733-CF42FC7861D7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueueIT.KnownUser.V3.AspNetCore", "QueueIT.KnownUser.V3.AspNetCore\QueueIT.KnownUser.V3.AspNetCore.csproj", "{370A3272-63DD-4A17-9733-CF42FC7861D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueueIT.KnownUserV3.SDK.Tests", "QueueIT.KnownUserV3.SDK.Tests\QueueIT.KnownUserV3.SDK.Tests.csproj", "{2C01819E-AD73-441D-9B20-1CD0F47395A8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueueIT.KnownUser.V3.AspNetCore.Tests", "QueueIT.KnownUser.V3.AspNetCore.Tests\QueueIT.KnownUser.V3.AspNetCore.Tests.csproj", "{2C01819E-AD73-441D-9B20-1CD0F47395A8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

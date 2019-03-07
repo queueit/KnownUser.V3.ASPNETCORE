@@ -1,9 +1,9 @@
-﻿using System;
-using System.Web;
+﻿using QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig;
+using System;
 using System.Collections.Generic;
-using QueueIT.KnownUserV3.SDK.IntegrationConfig;
+using System.Web;
 
-namespace QueueIT.KnownUserV3.SDK
+namespace QueueIT.KnownUser.V3.AspNetCore
 {
     internal interface IUserInQueueService
     {

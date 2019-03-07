@@ -1,11 +1,11 @@
-﻿using QueueIT.KnownUserV3.SDK.IntegrationConfig;
+﻿using QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Web;
-using System.Collections.Specialized;
 
-namespace QueueIT.KnownUserV3.SDK
+namespace QueueIT.KnownUser.V3.AspNetCore
 {
     #region Internals
     internal interface IHttpRequest

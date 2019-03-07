@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Text.RegularExpressions;
-using System.Web;
 
-namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
+namespace QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig
 {
     internal class IntegrationEvaluator : IIntegrationEvaluator
     {

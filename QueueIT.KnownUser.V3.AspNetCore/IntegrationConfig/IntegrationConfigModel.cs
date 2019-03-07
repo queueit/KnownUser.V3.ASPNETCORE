@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
+namespace QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig
 {
     public class IntegrationConfigModel
     {
