@@ -150,7 +150,7 @@ public class KnownUserValidator
           {
               EventId = "event1", //ID of the queue to use
               CookieDomain = ".mydomain.com", //Optional - Domain name where the Queue-it session cookie should be saved. Default is to save on the domain of the request
-              QueueDomain = "queue.mydomain.com", //Optional - Domian name of the queue. Default is [CustomerId].queue-it.net
+              QueueDomain = "queue.mydomain.com", //Optional - Domain name of the queue. Default is [CustomerId].queue-it.net
               CookieValidityMinute = 15, //Optional - Validity of the Queue-it session cookie. Default is 10 minutes
               ExtendCookieValidity = false, //Optional - Should the Queue-it session cookie validity time be extended each time the validation runs? Default is true.
               Culture = "en-US", //Optional - Culture of the queue ticket layout in the format specified here: https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx Default is to use what is specified on Event
