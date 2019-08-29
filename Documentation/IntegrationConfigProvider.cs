@@ -1,10 +1,9 @@
-﻿using QueueIT.KnownUserV3.SDK.IntegrationConfig;
+using Newtonsoft.Json;
+using QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Timers;
-using System.Web.Script.Serialization;
 
 namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
 {
@@ -68,14 +67,11 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
                     {
                         if (response.StatusCode != HttpStatusCode.OK)
                             throw new Exception($"It was not sucessful retriving config file status code {response.StatusCode} from {configUrl}");
+                        
                         using (StreamReader reader = new StreamReader(response.GetResponseStream()))
                         {
-                            JavaScriptSerializer deserializer = new JavaScriptSerializer();
-                            var deserialized = deserializer.Deserialize<CustomerIntegration>(reader.ReadToEnd());
-                            if (deserialized == null)
-                                throw new Exception("CustomerIntegration is null");
-                             _cachedIntegrationConfig = deserialized;
-
+                             var deserialized = JsonConvert.DeserializeObject<CustomerIntegration>(reader.ReadToEnd());
+                            _cachedIntegrationConfig = deserialized ?? throw new Exception("CustomerIntegration is null");
                         }
                         return;
                     }
