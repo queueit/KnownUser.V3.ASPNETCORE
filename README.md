@@ -112,9 +112,9 @@ public class KnownUserValidator
        catch (Exception ex)
        {
            return true;
-           //There was an error validationg the request
-           //Use your own logging framework to log the Exception
-           //This was a configuration exception, so we let the user continue
+           // There was an error validationg the request
+           // Use your own logging framework to log the Exception
+           // This was a configuration exception, so we let the user continue
        }
    }
 }
@@ -184,9 +184,9 @@ public class KnownUserValidator
        catch (Exception ex)
        {
            return true;
-           //There was an error validationg the request
-           //Use your own logging framework to log the Exception
-           //This was a configuration exception, so we let the user continue
+           // There was an error validationg the request
+           // Use your own logging framework to log the Exception
+           // This was a configuration exception, so we let the user continue
        }
    }
 }
@@ -258,9 +258,9 @@ public class KnownUserValidator
        catch (Exception ex)
        {
            return true;
-           //There was an error validationg the request
-           //Use your own logging framework to log the Exception
-           //This was a configuration exception, so we let the user continue
+           // There was an error validationg the request
+           // Use your own logging framework to log the Exception
+           // This was a configuration exception, so we let the user continue
        }
    }
 }
