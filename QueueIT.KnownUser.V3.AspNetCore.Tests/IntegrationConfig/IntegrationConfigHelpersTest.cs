@@ -29,34 +29,8 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
             Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, true, true, "test_test1", "Test1", null));
             Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, true, false, "test_test1", "test1", null));
             Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, false, false, "test_dsdsdsdtest1", "*", null));
-        }
-
-        [Fact]
-        public void Evaluate_StartsWith()
-        {
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, false, false, "test1_test1_test", "test1", null));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, false, false, "test1_test1_test", "Test1", null));
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, false, true, "test1_test1_test", "Test1", null));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, true, true, "test1_test1_test", "Test1", null));
-        }
-
-        [Fact]
-        public void Evaluate_EndsWith()
-        {
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EndsWith, false, false, "test1_test1_testshop", "shop", null));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EndsWith, false, false, "test1_test1_testshop2", "shop", null));
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EndsWith, false, true, "test1_test1_testshop", "Shop", null));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EndsWith, true, true, "test1_test1_testshop", "Shop", null));
-        }
-
-        [Fact]
-        public void Evaluate_MatchesWith()
-        {
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, false, false, "test1_test1_testshop", ".*shop.*", null));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, false, false, "test1_test1_testshop2", ".*Shop.*", null));
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, false, true, "test1_test1_testshop", ".*Shop.*", null));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, true, true, "test1_test1_testshop", ".*Shop.*", null));
-        }
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, false, false, "", "*", null));
+        }        
 
         [Fact]
         public void Evaluate_EqualsAny()

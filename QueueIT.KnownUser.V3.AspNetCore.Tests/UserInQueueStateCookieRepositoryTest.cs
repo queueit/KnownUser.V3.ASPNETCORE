@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Specialized;
-using System.Web;
 using Xunit;
 
 namespace QueueIT.KnownUser.V3.AspNetCore.Tests
@@ -430,7 +429,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             var issueTime = DateTimeHelper.GetUnixTimeStampFromDate(DateTime.UtcNow.AddMinutes(-11));
             var hash = QueueITTokenGenerator.GetSHA256Hash(eventId.ToLower() + queueId + "queue" + issueTime.ToString(),
                 secretKey);
-            var cookieValue = HttpUtility.UrlEncode($"EventId={eventId}&QueueId={queueId}&RedirectType=queue&IssueTime={issueTime}&Hash={hash}");
+            var cookieValue = Uri.EscapeDataString($"EventId={eventId}&QueueId={queueId}&RedirectType=queue&IssueTime={issueTime}&Hash={hash}");
 
             KnownUserTest.HttpContextMock fakeContext = new KnownUserTest.HttpContextMock();
             var fakeRequest = new KnownUserTest.MockHttpRequest()
@@ -462,7 +461,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             var issueTime = DateTimeHelper.GetUnixTimeStampFromDate(DateTime.UtcNow.AddMinutes(-4));
             var hash = QueueITTokenGenerator.GetSHA256Hash(eventId.ToLower() + queueId + "3" + "idle" + issueTime.ToString(),
                 secretKey);
-            var cookieValue = HttpUtility.UrlEncode($"EventId={eventId}&QueueId={queueId}&{_FixedCookieValidityMinutesKey}=3&RedirectType=idle&IssueTime={issueTime}&Hash={hash}");
+            var cookieValue = Uri.EscapeDataString($"EventId={eventId}&QueueId={queueId}&{_FixedCookieValidityMinutesKey}=3&RedirectType=idle&IssueTime={issueTime}&Hash={hash}");
 
             KnownUserTest.HttpContextMock fakeContext = new KnownUserTest.HttpContextMock();
             var fakeRequest = new KnownUserTest.MockHttpRequest()
@@ -494,7 +493,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             var issueTime = DateTimeHelper.GetUnixTimeStampFromDate(DateTime.UtcNow);
             var hash = QueueITTokenGenerator.GetSHA256Hash(eventId.ToLower() + queueId + "3" + "idle" + issueTime.ToString(),
                 secretKey);
-            var cookieValue =$"EventId={eventId}&QueueId={queueId}&{_FixedCookieValidityMinutesKey}=3&RedirectType=idle&IssueTime={issueTime}&Hash={hash}";
+            var cookieValue = $"EventId={eventId}&QueueId={queueId}&{_FixedCookieValidityMinutesKey}=3&RedirectType=idle&IssueTime={issueTime}&Hash={hash}";
 
             KnownUserTest.HttpContextMock fakeContext = new KnownUserTest.HttpContextMock();
             var fakeRequest = new KnownUserTest.MockHttpRequest()
