@@ -77,9 +77,6 @@ namespace QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig
         public const string Contains = "Contains";
         public const string EqualsAny = "EqualsAny";
         public const string ContainsAny = "ContainsAny";
-        public const string StartsWith = "StartsWith";
-        public const string EndsWith = "EndsWith";
-        public const string MatchesWith = "MatchesWith";
     }
 
     internal static class LogicalOperatorType

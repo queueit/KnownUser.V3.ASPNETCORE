@@ -20,71 +20,127 @@ namespace QueueIT.KnownUser.V3.AspNetCore
 
         public static QueueUrlParams ExtractQueueParams(string queueitToken)
         {
-            try
-            {
-                if (string.IsNullOrEmpty(queueitToken))
-                    return null;
-
-                QueueUrlParams result = new QueueUrlParams()
-                {
-                    QueueITToken = queueitToken
-                };
-                var paramList = result.QueueITToken.Split(KeyValueSeparatorGroupChar);
-                foreach (var paramKeyValue in paramList)
-                {
-                    var keyValueArr = paramKeyValue.Split(KeyValueSeparatorChar);
-
-                    switch (keyValueArr[0])
-                    {
-                        case TimeStampKey:
-                            result.TimeStamp = DateTimeHelper.GetDateTimeFromUnixTimeStamp(keyValueArr[1]);
-                            break;
-                        case CookieValidityMinutesKey:
-                            {
-                                int cookieValidity = 0;
-                                if (int.TryParse(keyValueArr[1], out cookieValidity))
-                                {
-                                    result.CookieValidityMinutes = cookieValidity;
-                                }
-                                else
-                                {
-                                    result.CookieValidityMinutes = null;
-                                }
-                                break;
-                            }
-
-                        case EventIdKey:
-                            result.EventId = keyValueArr[1];
-                            break;
-                        case ExtendableCookieKey:
-                            {
-                                bool extendCookie;
-                                if (!bool.TryParse(keyValueArr[1], out extendCookie))
-                                    extendCookie = false;
-                                result.ExtendableCookie = extendCookie;
-                                break;
-                            }
-                        case HashKey:
-                            result.HashCode = keyValueArr[1];
-                            break;
-                        case QueueIdKey:
-                            result.QueueId = keyValueArr[1];
-                            break;
-                        case RedirectTypeKey:
-                            result.RedirectType = keyValueArr[1];
-                            break;
-
-                    }
-                }
-
-                result.QueueITTokenWithoutHash =
-                    result.QueueITToken.Replace($"{KeyValueSeparatorGroupChar}{HashKey}{KeyValueSeparatorChar}{result.HashCode}", "");
-                return result;
-            }
-            catch
-            {
+            if (string.IsNullOrEmpty(queueitToken))
                 return null;
+
+            QueueUrlParams result = new QueueUrlParams()
+            {
+                QueueITToken = queueitToken
+            };
+            var paramList = result.QueueITToken.Split(KeyValueSeparatorGroupChar);
+            foreach (var paramKeyValue in paramList)
+            {
+                var keyValueArr = paramKeyValue.Split(KeyValueSeparatorChar);
+                if (keyValueArr.Length != 2)
+                    continue;
+
+                switch (keyValueArr[0])
+                {
+                    case TimeStampKey:
+                        result.TimeStamp = DateTimeHelper.GetDateTimeFromUnixTimeStamp(keyValueArr[1]);
+                        break;
+                    case CookieValidityMinutesKey:
+                        {
+                            int cookieValidity = 0;
+                            if (int.TryParse(keyValueArr[1], out cookieValidity))
+                            {
+                                result.CookieValidityMinutes = cookieValidity;
+                            }
+                            else
+                            {
+                                result.CookieValidityMinutes = null;
+                            }
+                            break;
+                        }
+                    case HashKey:
+                        result.HashCode = keyValueArr[1];
+                        break;
+                    case EventIdKey:
+                        result.EventId = keyValueArr[1];
+                        break;
+                    case ExtendableCookieKey:
+                        {
+                            bool extendCookie;
+                            if (!bool.TryParse(keyValueArr[1], out extendCookie))
+                                extendCookie = false;
+                            result.ExtendableCookie = extendCookie;
+                            break;
+                        }
+
+                    case QueueIdKey:
+                        result.QueueId = keyValueArr[1];
+                        break;
+                    case RedirectTypeKey:
+                        result.RedirectType = keyValueArr[1];
+                        break;
+                }
             }
+            result.QueueITTokenWithoutHash =
+               result.QueueITToken.Replace($"{KeyValueSeparatorGroupChar}{HashKey}{KeyValueSeparatorChar}{result.HashCode}", "");
+            return result;
+        }
+    }
+
+    internal class ConnectorDiagnostics
+    {
+        internal bool IsEnabled { get; private set; }
+        internal bool HasError { get; private set; }
+        internal RequestValidationResult ValidationResult { get; private set; }
+
+        private void SetStateWithTokenError(string customerId, string errorCode)
+        {
+            HasError = true;
+            ValidationResult = new RequestValidationResult(
+                "ConnectorDiagnosticsRedirect",
+                redirectUrl: string.Format("https://{0}.api2.queue-it.net/{0}/diagnostics/connector/error/?code={1}", customerId, errorCode)
+            );
+        }
+
+        private void SetStateWithSetupError()
+        {
+            HasError = true;
+            ValidationResult = new RequestValidationResult(
+                "ConnectorDiagnosticsRedirect",
+                redirectUrl: "https://api2.queue-it.net/diagnostics/connector/error/?code=setup"
+            );
+        }
+
+        internal static ConnectorDiagnostics Verify(string customerId, string secretKey, string queueitToken)
+        {
+            var diagnostics = new ConnectorDiagnostics();
+
+            var qParams = QueueParameterHelper.ExtractQueueParams(queueitToken);
+
+            if (qParams == null)
+                return diagnostics;
+
+            if (qParams.RedirectType == null)
+                return diagnostics;
+
+            if (!string.Equals(qParams.RedirectType, "debug", StringComparison.OrdinalIgnoreCase))
+                return diagnostics;
+
+            if (string.IsNullOrEmpty(customerId) || string.IsNullOrEmpty(secretKey))
+            {
+                diagnostics.SetStateWithSetupError();
+                return diagnostics;
+            }
+
+            if (HashHelper.GenerateSHA256Hash(secretKey, qParams.QueueITTokenWithoutHash) != qParams.HashCode)
+            {
+                diagnostics.SetStateWithTokenError(customerId, "hash");
+                return diagnostics;
+            }
+
+            if (qParams.TimeStamp < DateTime.UtcNow)
+            {
+                diagnostics.SetStateWithTokenError(customerId, "timestamp");
+                return diagnostics;
+            }
+
+            diagnostics.IsEnabled = true;
+
+            return diagnostics;
         }
     }
 
@@ -131,7 +187,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore
 
     internal class QueueUrlParams
     {
-        public DateTime TimeStamp { get; set; }
+        public DateTime TimeStamp { get; set; } = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
         public string EventId { get; set; }
         public string HashCode { get; set; }
         public bool ExtendableCookie { get; set; }

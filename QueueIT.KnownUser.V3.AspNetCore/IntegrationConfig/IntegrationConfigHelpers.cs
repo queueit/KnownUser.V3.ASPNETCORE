@@ -193,13 +193,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig
                 case ComparisonOperatorType.EqualS:
                     return EqualS(value, valueToCompare, isNegative, isIgnoreCase);
                 case ComparisonOperatorType.Contains:
-                    return Contains(value, valueToCompare, isNegative, isIgnoreCase);
-                case ComparisonOperatorType.StartsWith:
-                    return StartsWith(value, valueToCompare, isNegative, isIgnoreCase);
-                case ComparisonOperatorType.EndsWith:
-                    return EndsWith(value, valueToCompare, isNegative, isIgnoreCase);
-                case ComparisonOperatorType.MatchesWith:
-                    return MatchesWith(value, valueToCompare, isNegative, isIgnoreCase);
+                    return Contains(value, valueToCompare, isNegative, isIgnoreCase);             
                 case ComparisonOperatorType.EqualsAny:
                     return EqualsAny(value, valuesToCompare, isNegative, isIgnoreCase);
                 case ComparisonOperatorType.ContainsAny:
@@ -211,13 +205,13 @@ namespace QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig
 
         private static bool Contains(string value, string valueToCompare, bool isNegative, bool ignoreCase)
         {
-            if (valueToCompare == "*")
+            if (valueToCompare == "*" && !string.IsNullOrEmpty(value))
                 return true;
 
             var evaluation = false;
 
             if (ignoreCase)
-                evaluation = value.ToUpper().Contains(valueToCompare.ToUpper());
+                evaluation = value.IndexOf(valueToCompare, StringComparison.OrdinalIgnoreCase) >= 0;
             else
                 evaluation = value.Contains(valueToCompare);
 
@@ -232,56 +226,9 @@ namespace QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig
             var evaluation = false;
 
             if (ignoreCase)
-                evaluation = value.ToUpper() == valueToCompare.ToUpper();
+                evaluation = string.Equals(value, valueToCompare, StringComparison.OrdinalIgnoreCase);
             else
                 evaluation = value == valueToCompare;
-
-            if (isNegative)
-                return !evaluation;
-            else
-                return evaluation;
-        }
-
-        private static bool EndsWith(string value, string valueToCompare, bool isNegative, bool ignoreCase)
-        {
-            var evaluation = false;
-
-            if (ignoreCase)
-                evaluation = value.ToUpper().EndsWith(valueToCompare.ToUpper());
-            else
-                evaluation = value.EndsWith(valueToCompare);
-
-            if (isNegative)
-                return !evaluation;
-            else
-                return evaluation;
-        }
-
-        private static bool StartsWith(string value, string valueToCompare, bool isNegative, bool ignoreCase)
-        {
-            var evaluation = false;
-
-            if (ignoreCase)
-                evaluation = value.ToUpper().StartsWith(valueToCompare.ToUpper());
-            else
-                evaluation = value.StartsWith(valueToCompare);
-
-            if (isNegative)
-                return !evaluation;
-            else
-                return evaluation;
-        }
-
-        private static bool MatchesWith(string value, string valueToCompare, bool isNegative, bool isIgnoreCase)
-        {
-            Regex rg = null;
-
-            if (isIgnoreCase)
-                rg = new Regex(valueToCompare, RegexOptions.IgnoreCase);
-            else
-                rg = new Regex(valueToCompare);
-
-            var evaluation = rg.IsMatch(value);
 
             if (isNegative)
                 return !evaluation;

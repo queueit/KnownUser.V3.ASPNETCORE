@@ -1,16 +1,27 @@
-﻿using System.Web;
-
-namespace QueueIT.KnownUser.V3.AspNetCore
+﻿namespace QueueIT.KnownUser.V3.AspNetCore
 {
     public class RequestValidationResult
     {
-        public RequestValidationResult(string actionType)
+        public RequestValidationResult(
+            string actionType,
+            string eventId = null,
+            string queueId = null,
+            string redirectUrl = null,
+            string redirectType = null,
+            string actionName = null,
+            bool isAjaxResult = false)
         {
             ActionType = actionType;
+            EventId = eventId;
+            QueueId = queueId;
+            RedirectUrl = redirectUrl;
+            RedirectType = redirectType;
+            ActionName = actionName;
+            IsAjaxResult = isAjaxResult;
         }
 
-        public string RedirectUrl { get; internal set; }
-        public string QueueId { get; internal set; }
+        public string RedirectUrl { get; }
+        public string QueueId { get; }
         public bool DoRedirect
         {
             get
@@ -18,9 +29,10 @@ namespace QueueIT.KnownUser.V3.AspNetCore
                 return !string.IsNullOrEmpty(RedirectUrl);
             }
         }
-        public string EventId { get; internal set; }
-        public string ActionType { get; internal set; }
-        public string RedirectType { get; internal set; }
+        public string EventId { get; }
+        public string ActionType { get; }
+        public string ActionName { get; }
+        public string RedirectType { get; }
         public bool IsAjaxResult { get; internal set; }
         public string AjaxQueueRedirectHeaderKey
         {
@@ -29,12 +41,13 @@ namespace QueueIT.KnownUser.V3.AspNetCore
                 return "x-queueit-redirect";
             }
         }
-        public string AjaxRedirectUrl {
+        public string AjaxRedirectUrl
+        {
             get
             {
                 if (!string.IsNullOrEmpty(RedirectUrl))
                 {
-                    return HttpUtility.UrlEncode(RedirectUrl);
+                    return System.Uri.EscapeDataString(RedirectUrl);
                 }
                 return string.Empty;
             }
@@ -46,7 +59,9 @@ namespace QueueIT.KnownUser.V3.AspNetCore
         public QueueEventConfig()
         {
             Version = -1;
+            ActionName = "unspecified";
         }
+
         public string EventId { get; set; }
         public string LayoutName { get; set; }
         public string Culture { get; set; }
@@ -55,11 +70,13 @@ namespace QueueIT.KnownUser.V3.AspNetCore
         public int CookieValidityMinute { get; set; }
         public string CookieDomain { get; set; }
         public int Version { get; set; }
+        public string ActionName { get; set; }
+
         public override string ToString()
         {
             return $"EventId:{EventId}&Version:{Version}" +
                 $"&QueueDomain:{QueueDomain}&CookieDomain:{CookieDomain}&ExtendCookieValidity:{ExtendCookieValidity}" +
-                $"&CookieValidityMinute:{CookieValidityMinute}&LayoutName:{LayoutName}&Culture:{Culture}";
+                $"&CookieValidityMinute:{CookieValidityMinute}&LayoutName:{LayoutName}&Culture:{Culture}&ActionName:{ActionName}";
         }
     }
 
@@ -68,15 +85,19 @@ namespace QueueIT.KnownUser.V3.AspNetCore
         public CancelEventConfig()
         {
             Version = -1;
+            ActionName = "unspecified";
         }
+
         public string EventId { get; set; }
         public string QueueDomain { get; set; }
         public int Version { get; set; }
         public string CookieDomain { get; set; }
+        public string ActionName { get; set; }
+
         public override string ToString()
         {
             return $"EventId:{EventId}&Version:{Version}" +
-                $"&QueueDomain:{QueueDomain}&CookieDomain:{CookieDomain}";
+                $"&QueueDomain:{QueueDomain}&CookieDomain:{CookieDomain}&ActionName:{ActionName}";
         }
     }
 }
