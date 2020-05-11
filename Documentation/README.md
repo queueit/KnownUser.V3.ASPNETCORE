@@ -11,7 +11,7 @@ These Triggers and Actions are specified in the Go Queue-it self-service portal.
 There are 3 possible ways you can retrieve the integration config information and provide it for the Known User SDK:
 
 **1. Time based pulling:**
-   In this method, you would have a long running tasks retrieving the latest version of published integration with a sepecified time interval from Queue-it repository with the address **https://[your-customer-id].queue-it.net/status/integrationconfig/[your-customer-id]** (to make it sure the request won't be cached you can add some random number as query string at the end of link for each request) and then cache and reuse the retrieved value until the next interval.
+   In this method, you would have a long running tasks retrieving the latest version of published integration with a sepecified time interval from Queue-it repository with the address **https://[your-customer-id].queue-it.net/status/integrationconfig/[your-customer-id]** or via secure link (*) **https://[your-customer-id].queue-it.net/status/integrationconfig/secure/[your-customer-id]** (to make it sure the request won't be cached you can add some random number as query string at the end of link for each request) and then cache and reuse the retrieved value until the next interval.
    The [IntegrationConfigProvider.cs]   (https://github.com/queueit/KnownUser.V3.ASPNETCORE/blob/master/Documentation/IntegrationConfigProvider.cs) file is an example of how the download and caching of the configuration can be done. 
    *This is just an example*, but if you make your own downloader, please cache the result for 5 - 10 minutes to limit number of download requests. You should NEVER download the configuration as part of the request handling.
 
@@ -74,6 +74,15 @@ public static string ConvertHexToString(string hexString)
 ```
 **3. Manually updating integration configuration:**
     In this method, after changing and publishing your configuration using the Go Queue-it self-service portal, you are able to download the file and then manually copy and paste it to your intfrastructure.
+
+#### * How to download integration config with Api secrete Key:
+Integration configuration contains valuable information like triggers and actions. Anyone can download the configuration by knowing the URL because it does not require any authentication. You can protect integration configurations by enabling the “**Secure integration config**” setting, so only legitimate systems can download it by providing a valid API key.
+
+1. You need to enable “**Secure integration config**” setting in the Go Queue-it self-service portal.
+2. You need to decorate the request by adding API key in the request header. You can get API key in the Go Queue-it self-service portal.
+
+curl --request GET https://[your-customer-id].queue-it.net/status/integrationconfig/secure/[your-customer-id]' --header 'api-key: [Customer API-Key]'
+
 
 ## Helper functions
 The [QueueITHelpers.cs](https://github.com/queueit/KnownUser.V3.ASPNETCORE/blob/master/Documentation/QueueITHelpers.cs) file includes some helper functions 
