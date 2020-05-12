@@ -23,11 +23,13 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
         static CustomerIntegration _cachedIntegrationConfig;
         private static bool _isInitialized = false;
         private static string _customerId;
-        public static CustomerIntegration GetCachedIntegrationConfig(string customerId)
+        private static string _apiKey;
+        public static CustomerIntegration GetCachedIntegrationConfig(string customerId, string apiKey)
         {
             if(!_isInitialized)
             {
                 _customerId = customerId;
+                _apiKey = apiKey;
                 lock (_lockObject)
                 {
                     if (!_isInitialized)
@@ -57,11 +59,11 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
             int tryCount = 0;
             while (tryCount < 5)
             {
-                var timeBaseQueryString = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds.ToString();
-                var configUrl = string.Format("https://{0}.queue-it.net/status/integrationconfig/{0}?qr={1}", _customerId, timeBaseQueryString);
+                var configUrl = string.Format("https://{0}.queue-it.net/status/integrationconfig/secure/{0}", _customerId);
                 try
                 {
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create(configUrl);
+                    request.Headers.Add("api-key", _apiKey);
                     request.Timeout = _downloadTimeoutMS;
                     using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
                     {
