@@ -59,8 +59,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
             int tryCount = 0;
             while (tryCount < 5)
             {
-                var timeBaseQueryString = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds.ToString();
-                var configUrl = string.Format("https://{0}.queue-it.net/status/integrationconfig/secure/{0}", _customerId, timeBaseQueryString);
+                var configUrl = string.Format("https://{0}.queue-it.net/status/integrationconfig/secure/{0}", _customerId);
                 try
                 {
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create(configUrl);
