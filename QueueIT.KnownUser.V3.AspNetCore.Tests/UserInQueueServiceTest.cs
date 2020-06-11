@@ -28,7 +28,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             };
 
             cookieProviderMock.GetState("", 0, "")
-                .ReturnsForAnyArgs(new StateInfo(true, queueId, null, "idle"));
+                .ReturnsForAnyArgs(new StateInfo(true, true, queueId, null, "idle"));
 
 
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
@@ -59,7 +59,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
                 ActionName = "QueueAction"
             };
 
-            cookieProviderMock.GetState("", 20, "").ReturnsForAnyArgs(new StateInfo(true, queueId, null, "disabled"));
+            cookieProviderMock.GetState("", 20, "").ReturnsForAnyArgs(new StateInfo(true, true, queueId, null, "disabled"));
 
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
 
@@ -100,7 +100,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             var customerKey = "4e1db821-a825-49da-acd0-5d376f2068db";
 
             cookieProviderMock.GetState("", 10, "")
-              .ReturnsForAnyArgs(new StateInfo(true, queueId, 3, "idle"));
+              .ReturnsForAnyArgs(new StateInfo(true, true, queueId, 3, "idle"));
 
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
 
@@ -132,7 +132,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             var customerKey = "4e1db821-a825-49da-acd0-5d376f2068db";
             var queueId = "iopdb821-a825-49da-acd0-5d376f2068db";
 
-            cookieProviderMock.GetState("", 10, "").ReturnsForAnyArgs(new StateInfo(false, "", null, ""));
+            cookieProviderMock.GetState("", 10, "").ReturnsForAnyArgs(new StateInfo(false, false, "", null, ""));
             var queueitToken = QueueITTokenGenerator.GenerateToken(
                                   DateTime.UtcNow.AddHours(1),
                                   "e1",
@@ -166,7 +166,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             Assert.True(config.EventId == result.EventId);
             Assert.Equal(config.ActionName, result.ActionName);
             cookieProviderMock.DidNotReceiveWithAnyArgs().Store("", "", null, "", "", "");
-            cookieProviderMock.ReceivedWithAnyArgs().CancelQueueCookie(config.EventId, config.CookieDomain);
+            cookieProviderMock.DidNotReceiveWithAnyArgs().CancelQueueCookie(config.EventId, config.CookieDomain);
         }
 
         [Fact]
@@ -186,7 +186,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             var customerKey = "4e1db821-a825-49da-acd0-5d376f2068db";
             var queueId = "iopdb821-a825-49da-acd0-5d376f2068db";
 
-            cookieProviderMock.GetState("", 10, "").ReturnsForAnyArgs(new StateInfo(false, "", null, ""));
+            cookieProviderMock.GetState("", 10, "").ReturnsForAnyArgs(new StateInfo(false, false, "", null, ""));
             string hash = null;
             var queueitToken = QueueITTokenGenerator.GenerateToken(
                                     DateTime.UtcNow.AddHours(-1),
@@ -221,7 +221,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             Assert.True(config.EventId == result.EventId);
             Assert.Equal(config.ActionName, result.ActionName);
             cookieProviderMock.DidNotReceiveWithAnyArgs().Store("", "", null, "", null, "");
-            cookieProviderMock.ReceivedWithAnyArgs().CancelQueueCookie(config.EventId, config.CookieDomain);
+            cookieProviderMock.DidNotReceiveWithAnyArgs().CancelQueueCookie(config.EventId, config.CookieDomain);
         }
 
         [Fact]
@@ -239,7 +239,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             };
             var customerKey = "4e1db821-a825-49da-acd0-5d376f2068db";
             var queueId = "iopdb821-a825-49da-acd0-5d376f2068db";
-            cookieProviderMock.GetState("", 10, "").ReturnsForAnyArgs(new StateInfo(false, "", null, ""));
+            cookieProviderMock.GetState("", 10, "").ReturnsForAnyArgs(new StateInfo(false, false, "", null, ""));
             string hash = "";
 
             var queueitToken = QueueITTokenGenerator.GenerateToken(
@@ -275,7 +275,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             Assert.True(config.EventId == result.EventId);
             Assert.Equal(config.ActionName, result.ActionName);
             cookieProviderMock.DidNotReceiveWithAnyArgs().Store("", "", null, "", null, "");
-            cookieProviderMock.ReceivedWithAnyArgs().CancelQueueCookie(config.EventId, config.CookieDomain);
+            cookieProviderMock.DidNotReceiveWithAnyArgs().CancelQueueCookie(config.EventId, config.CookieDomain);
         }
 
         [Fact]
@@ -294,7 +294,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             var customerKey = "4e1db821-a825-49da-acd0-5d376f2068db";
 
             var queueId = "iopdb821-a825-49da-acd0-5d376f2068db";
-            cookieProviderMock.GetState("", 10, "").ReturnsForAnyArgs(new StateInfo(false, "", null, ""));
+            cookieProviderMock.GetState("", 10, "").ReturnsForAnyArgs(new StateInfo(false, false, "", null, ""));
             string hash = "";
 
             var queueitToken = QueueITTokenGenerator.GenerateToken(
@@ -342,7 +342,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             var customerKey = "secretekeyofuser";
             var queueId = "f8757c2d-34c2-4639-bef2-1736cdd30bbb";
 
-            cookieProviderMock.GetState("", 10, "").ReturnsForAnyArgs(new StateInfo(false, "", null, ""));
+            cookieProviderMock.GetState("", 10, "").ReturnsForAnyArgs(new StateInfo(false, false, "", null, ""));
 
             var queueitToken = "e_eventid~q_f8757c2d-34c2-4639-bef2-1736cdd30bbb~ri_34678c2d-34c2-4639-bef2-1736cdd30bbb~ts_1797033600~ce_False~cv_3~rt_DirectLink~h_5ee2babc3ac9fae9d80d5e64675710c371876386e77209f771007dc3e093e326";
 
@@ -385,7 +385,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
                 ActionName = "QueueAction"
             };
 
-            cookieProviderMock.GetState("", 0, "").ReturnsForAnyArgs(new StateInfo(false, "", null, ""));
+            cookieProviderMock.GetState("", 0, "").ReturnsForAnyArgs(new StateInfo(false, false, "", null, ""));
 
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
             var targetUrl = "http://test.test.com?b=h";
@@ -404,7 +404,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             cookieProviderMock.DidNotReceiveWithAnyArgs().Store(null, null, null, null, null, null);
             Assert.True(config.EventId == result.EventId);
             Assert.Equal(config.ActionName, result.ActionName);
-            cookieProviderMock.ReceivedWithAnyArgs().CancelQueueCookie(config.EventId, config.CookieDomain);
+            cookieProviderMock.DidNotReceiveWithAnyArgs().CancelQueueCookie(config.EventId, config.CookieDomain);
         }
 
         [Fact]
@@ -424,7 +424,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
                 ActionName = "QueueAction"
             };
 
-            cookieProviderMock.GetState("", 0, "").ReturnsForAnyArgs(new StateInfo(false, "", null, null));
+            cookieProviderMock.GetState("", 0, "").ReturnsForAnyArgs(new StateInfo(false, false, "", null, null));
 
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
 
@@ -442,7 +442,44 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             cookieProviderMock.DidNotReceiveWithAnyArgs().Store(null, null, null, null, null, null);
             Assert.True(config.EventId == result.EventId);
             Assert.Equal(config.ActionName, result.ActionName);
-            cookieProviderMock.ReceivedWithAnyArgs().CancelQueueCookie(config.EventId, config.CookieDomain);
+            cookieProviderMock.DidNotReceiveWithAnyArgs().CancelQueueCookie(config.EventId, config.CookieDomain);
+        }
+
+        [Fact]
+        public void ValidateRequest_InvalidCookie_WithoutToken_RedirectToQueue_NotargetUrl()
+        {
+            var cookieProviderMock = Substitute.For<IUserInQueueStateRepository>();
+
+            var config = new QueueEventConfig()
+            {
+                EventId = "e1",
+                QueueDomain = "testDomain.com",
+                CookieValidityMinute = 10,
+                ExtendCookieValidity = false,
+                Culture = null,
+                LayoutName = "testlayout",
+                Version = 10,
+                ActionName = "QueueAction"
+            };
+
+            cookieProviderMock.GetState("", 0, "").ReturnsForAnyArgs(new StateInfo(true, false, "", null, null));
+
+            UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
+
+            var knownUserVersion = UserInQueueService.SDK_VERSION;
+            var expectedUrl = $"https://testDomain.com/?c=testCustomer&e=e1" +
+             $"&ver={knownUserVersion}" +
+             $"&cver=10" +
+             $"&man=QueueAction" +
+             $"&l={config.LayoutName}";
+            var result = testObject.ValidateQueueRequest(null, "", config, "testCustomer", "key");
+
+            Assert.True(result.DoRedirect);
+            Assert.True(result.RedirectUrl.ToUpper() == expectedUrl.ToUpper());
+            cookieProviderMock.DidNotReceiveWithAnyArgs().Store(null, null, null, null, null, null);
+            Assert.True(config.EventId == result.EventId);
+            Assert.Equal(config.ActionName, result.ActionName);
+            cookieProviderMock.Received().CancelQueueCookie(config.EventId, config.CookieDomain);
         }
 
         [Fact]
@@ -461,7 +498,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
                 Version = 10,
                 ActionName = "QueueAction"
             };
-            cookieProviderMock.GetState("", 0, "").ReturnsForAnyArgs(new StateInfo(false, null, null, null));
+            cookieProviderMock.GetState("", 0, "").ReturnsForAnyArgs(new StateInfo(false, false, null, null, null));
 
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
             var targetUrl = "http://test.test.com?b=h";
@@ -474,7 +511,38 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             cookieProviderMock.DidNotReceiveWithAnyArgs().Store(null, null, null, null, null, null);
             Assert.True(config.EventId == result.EventId);
             Assert.Equal(config.ActionName, result.ActionName);
-            cookieProviderMock.ReceivedWithAnyArgs().CancelQueueCookie(config.EventId, config.CookieDomain);
+            cookieProviderMock.DidNotReceiveWithAnyArgs().CancelQueueCookie(config.EventId, config.CookieDomain);
+        }
+
+        [Fact]
+        public void ValidateRequest_InvalidCookie_InvalidToken()
+        {
+            var cookieProviderMock = Substitute.For<IUserInQueueStateRepository>();
+
+            var config = new QueueEventConfig()
+            {
+                EventId = "e1",
+                QueueDomain = "testDomain.com",
+                CookieValidityMinute = 10,
+                ExtendCookieValidity = false,
+                Culture = null,
+                LayoutName = "testlayout",
+                Version = 10,
+                ActionName = "QueueAction"
+            };
+            cookieProviderMock.GetState("", 0, "").ReturnsForAnyArgs(new StateInfo(true, false, null, null, null));
+
+            UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
+            var targetUrl = "http://test.test.com?b=h";
+            var knownUserVersion = UserInQueueService.SDK_VERSION;
+            var result = testObject.ValidateQueueRequest(targetUrl, "ts_sasa~cv_adsasa~ce_falwwwse~q_944c1f44-60dd-4e37-aabc-f3e4bb1c8895", config, "testCustomer", "key");
+
+            Assert.True(result.DoRedirect);
+            Assert.StartsWith($"https://testDomain.com/error/hash/?c=testCustomer&e=e1&ver={knownUserVersion}&cver=10&man=QueueAction&l=testlayout&queueittoken=ts_sasa~cv_adsasa~ce_falwwwse~q_944c1f44-60dd-4e37-aabc-f3e4bb1c8895&", result.RedirectUrl);
+            cookieProviderMock.DidNotReceiveWithAnyArgs().Store(null, null, null, null, null, null);
+            Assert.True(config.EventId == result.EventId);
+            Assert.Equal(config.ActionName, result.ActionName);
+            cookieProviderMock.Received().CancelQueueCookie(config.EventId, config.CookieDomain);
         }
 
         [Fact]
@@ -496,7 +564,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
                             $"&ver={knownUserVersion}"
                             + $"&cver=10&man=QueueAction&r=" + "url";
             cookieProviderMock.GetState("", 0, "", false)
-                  .ReturnsForAnyArgs(new StateInfo(true, queueId, 3, "idle"));
+                  .ReturnsForAnyArgs(new StateInfo(true, true, queueId, 3, "idle"));
 
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
 

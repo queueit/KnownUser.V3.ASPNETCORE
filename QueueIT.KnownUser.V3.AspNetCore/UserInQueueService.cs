@@ -30,7 +30,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore
 
     internal class UserInQueueService : IUserInQueueService
     {
-        internal const string SDK_VERSION = "v3-aspnetcore-" + "3.6.0";
+        internal const string SDK_VERSION = "v3-aspnetcore-" + "3.6.1";
 
         private readonly IUserInQueueStateRepository _userInQueueStateRepository;
 
@@ -64,35 +64,43 @@ namespace QueueIT.KnownUser.V3.AspNetCore
                     redirectType: state.RedirectType,
                     actionName: config.ActionName);
             }
-            QueueUrlParams queueParmas = QueueParameterHelper.ExtractQueueParams(queueitToken);
+            QueueUrlParams queueParams = QueueParameterHelper.ExtractQueueParams(queueitToken);
 
-            if (queueParmas != null)
+            RequestValidationResult requestValidationResult;
+            bool isTokenValid = false;
+            
+            if (queueParams != null)
             {
-                return GetQueueITTokenValidationResult(targetUrl, config, queueParmas, customerId, secretKey);
+                var tokenValidationResult = ValidateToken(config, queueParams, secretKey);
+                isTokenValid = tokenValidationResult.IsValid;
+
+                if (isTokenValid)
+                {
+                    requestValidationResult = GetValidTokenResult(config, queueParams, secretKey);
+                }
+                else
+                {
+                    requestValidationResult = GetErrorResult(customerId, targetUrl, config, queueParams, tokenValidationResult.ErrorCode);
+                }
             }
             else
             {
-                return CancelQueueCookieReturnQueueResult(targetUrl, config, customerId);
+                requestValidationResult = GetQueueResult(targetUrl, config, customerId);
             }
+            
+            if (state.IsFound && !isTokenValid)
+            {
+                _userInQueueStateRepository.CancelQueueCookie(config.EventId, config.CookieDomain);
+            }
+            
+            return requestValidationResult;
         }
 
-        private RequestValidationResult GetQueueITTokenValidationResult(
-            string targetUrl,
+        private RequestValidationResult GetValidTokenResult(
             QueueEventConfig config,
             QueueUrlParams queueParams,
-            string customerId,
             string secretKey)
         {
-            string calculatedHash = HashHelper.GenerateSHA256Hash(secretKey, queueParams.QueueITTokenWithoutHash);
-            if (calculatedHash != queueParams.HashCode)
-                return CancelQueueCookieReturnErrorResult(customerId, targetUrl, config, queueParams, "hash");
-
-            if (queueParams.EventId != config.EventId)
-                return CancelQueueCookieReturnErrorResult(customerId, targetUrl, config, queueParams, "eventid");
-
-            if (queueParams.TimeStamp < DateTime.UtcNow)
-                return CancelQueueCookieReturnErrorResult(customerId, targetUrl, config, queueParams, "timestamp");
-
             _userInQueueStateRepository.Store(
                 config.EventId,
                 queueParams.QueueId,
@@ -109,14 +117,13 @@ namespace QueueIT.KnownUser.V3.AspNetCore
                 actionName: config.ActionName);
         }
 
-        private RequestValidationResult CancelQueueCookieReturnErrorResult(
+        private RequestValidationResult GetErrorResult(
             string customerId,
-             string targetUrl,
-             QueueEventConfig config,
-             QueueUrlParams qParams,
-             string errorCode)
+            string targetUrl,
+            QueueEventConfig config,
+            QueueUrlParams qParams,
+            string errorCode)
         {
-            _userInQueueStateRepository.CancelQueueCookie(config.EventId, config.CookieDomain);
             var query = GetQueryString(customerId, config.EventId, config.Version, config.ActionName, config.Culture, config.LayoutName) +
                 $"&queueittoken={qParams.QueueITToken}" +
                 $"&ts={DateTimeHelper.GetUnixTimeStampFromDate(DateTime.UtcNow)}" +
@@ -131,12 +138,11 @@ namespace QueueIT.KnownUser.V3.AspNetCore
                 actionName: config.ActionName);
         }
 
-        private RequestValidationResult CancelQueueCookieReturnQueueResult(
+        private RequestValidationResult GetQueueResult(
             string targetUrl,
             QueueEventConfig config,
             string customerId)
         {
-            _userInQueueStateRepository.CancelQueueCookie(config.EventId, config.CookieDomain);
             var query = GetQueryString(customerId, config.EventId, config.Version, config.ActionName, config.Culture, config.LayoutName) +
                             (!string.IsNullOrEmpty(targetUrl) ? $"&t={Uri.EscapeDataString(targetUrl)}" : "");
 
@@ -225,6 +231,39 @@ namespace QueueIT.KnownUser.V3.AspNetCore
         public RequestValidationResult GetIgnoreResult(string actionName)
         {
             return new RequestValidationResult(ActionType.IgnoreAction, actionName: actionName);
+        }
+
+        private TokenValidationResult ValidateToken(
+            QueueEventConfig config,
+            QueueUrlParams queueParams,
+            string secretKey)
+        {
+            string calculatedHash = HashHelper.GenerateSHA256Hash(secretKey, queueParams.QueueITTokenWithoutHash);
+
+            if (calculatedHash != queueParams.HashCode)
+                return new TokenValidationResult(false, "hash");
+
+            if (queueParams.EventId != config.EventId)
+                return new TokenValidationResult(false, "eventid");
+
+            if (queueParams.TimeStamp < DateTime.UtcNow)
+                return new TokenValidationResult(false, "timestamp");
+
+            return new TokenValidationResult(true, null);
+        }
+
+        private class TokenValidationResult
+        {
+            public TokenValidationResult(
+                bool isValid,
+                string errorCode)
+            {
+                IsValid = isValid;
+                ErrorCode = errorCode;
+            }
+
+            public bool IsValid { get; }
+            public string ErrorCode { get; }
         }
     }
 }

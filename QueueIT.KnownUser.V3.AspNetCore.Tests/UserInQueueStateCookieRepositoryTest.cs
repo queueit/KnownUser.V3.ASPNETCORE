@@ -413,6 +413,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
 
             Assert.True(state.IsStateExtendable);
             Assert.True(state.IsValid);
+            Assert.True(state.IsFound);
             Assert.True(state.QueueId == queueId);
             Assert.True(state.RedirectType == "queue");
         }
@@ -447,6 +448,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             var state = testObject.GetState(eventId, 10, secretKey);
 
             Assert.True(!state.IsValid);
+            Assert.True(state.IsFound);
         }
 
         [Fact]
@@ -479,6 +481,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             var state = testObject.GetState(eventId, 10, secretKey);
 
             Assert.True(!state.IsValid);
+            Assert.True(state.IsFound);
         }
 
         [Fact]
@@ -512,8 +515,24 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
 
             Assert.False(state.IsStateExtendable);
             Assert.True(state.IsValid);
+            Assert.True(state.IsFound);
             Assert.True(state.QueueId == queueId);
             Assert.True(state.RedirectType == "idle");
+        }
+
+        [Fact]
+        public void GetState_NoCookie()
+        {
+            KnownUserTest.HttpContextMock fakeContext = new KnownUserTest.HttpContextMock();
+            var testObject = new UserInQueueStateCookieRepository(fakeContext);
+
+            var eventId = "event1";
+            var secretKey = "4e1db821-a825-49da-acd0-5d376f2068db";
+
+            var state = testObject.GetState(eventId, 10, secretKey);
+
+            Assert.False(state.IsFound);
+            Assert.False(state.IsValid);
         }
     }
 }
