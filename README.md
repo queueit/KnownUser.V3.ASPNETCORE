@@ -90,8 +90,9 @@ public class KnownUserValidator
 
           if (validationResult.DoRedirect)
           {
-               context.Response.Headers.Add("Cache-Control", "no-cache, no-store");
-               context.Response.Headers.Add("Expires", "-1");
+               context.Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");               
+               context.Response.Headers.Add("Pragma", "no-cache");
+               context.Response.Headers.Add("Expires", "Fri, 01 Jan 1990 00:00:00 GMT");
 
                //Send the user to the queue - either becuase hash was missing or becuase is was invalid
                context.Response.Redirect(validationResult.RedirectUrl);
