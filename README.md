@@ -173,7 +173,7 @@ public class KnownUserValidator
               CookieValidityMinute = 15, //Validity of the Queue-it session cookie should be positive number.
               ExtendCookieValidity = true, //Should the Queue-it session cookie validity time be extended each time the validation runs?
               Culture = "en-US", //Optional - Culture of the queue layout in the format specified here: https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx. If unspecified then settings from Event will be used. 
-              LayoutName = "MyCustomLayoutName" //Optional - Name of the queue ticket layout - e.g. "Default layout by Queue-it". If unspecified then settings from Event will be used
+              LayoutName = "MyCustomLayoutName" //Optional - Name of the queue layout. If unspecified then settings from Event will be used.
           };
 
           //Verify if the user has been through the queue
