@@ -168,12 +168,12 @@ public class KnownUserValidator
           var eventConfig = new QueueEventConfig()
           {
               EventId = "event1", //ID of the queue to use
-              CookieDomain = ".mydomain.com", //Optional - Domain name where the Queue-it session cookie should be saved.
+              //CookieDomain = ".mydomain.com", //Optional - Domain name where the Queue-it session cookie should be saved.
               QueueDomain = "queue.mydomain.com", //Domain name of the queue.
               CookieValidityMinute = 15, //Validity of the Queue-it session cookie should be positive number.
               ExtendCookieValidity = true, //Should the Queue-it session cookie validity time be extended each time the validation runs?
-              Culture = "en-US", //Optional - Culture of the queue layout in the format specified here: https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx. If unspecified then settings from Event will be used. 
-              LayoutName = "MyCustomLayoutName" //Optional - Name of the queue layout. If unspecified then settings from Event will be used.
+              //Culture = "en-US", //Optional - Culture of the queue layout in the format specified here: https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx. If unspecified then settings from Event will be used. 
+              //LayoutName = "MyCustomLayoutName" //Optional - Name of the queue layout. If unspecified then settings from Event will be used.
           };
 
           //Verify if the user has been through the queue
