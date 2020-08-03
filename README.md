@@ -78,12 +78,13 @@ public class KnownUserValidator
       {
           var customerId = "Your Queue-it customer ID";
           var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
+          var apiKey = "Your api-key as specified in Go Queue-it self-service platform";
 
           var requestUrl = $"{context.Request.Scheme}://{context.Request.Host}{context.Request.Path}{context.Request.QueryString}";
           var queueitToken = context.Request.Query[KnownUser.QueueITTokenKey];
           var pureUrl = Regex.Replace(requestUrl, @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
 
-          var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId); // download and cache using polling
+          var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId, apiKey); // download and cache using polling
 
           //Verify if the user has been through the queue
           var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken, integrationConfig, customerId, secretKey);
