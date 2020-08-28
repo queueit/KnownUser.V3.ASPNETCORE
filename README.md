@@ -109,7 +109,7 @@ public class KnownUserValidator
           {
                //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
                //if there was a match 
-               if (requestUrl.Contains(KnownUser.QueueITTokenKey) && !string.IsNullOrEmpty(validationResult.ActionType))
+               if (requestUrl.Contains(KnownUser.QueueITTokenKey) && validationResult.ActionType == "Queue")
                {
                    context.Response.Redirect(pureUrl);
                    return false;
@@ -199,7 +199,7 @@ public class KnownUserValidator
           {
                //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
                //if there was a match 
-               if (requestUrl.Contains(KnownUser.QueueITTokenKey) && !string.IsNullOrEmpty(validationResult.ActionType))
+               if (requestUrl.Contains(KnownUser.QueueITTokenKey) && validationResult.ActionType == "Queue")
                {
                    context.Response.Redirect(pureUrl);
                    return false;
