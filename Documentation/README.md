@@ -5,12 +5,13 @@ This folder contains some extra helper functions and examples.
 ## Downloading the Integration Configuration
 The KnownUser library needs the Triggers and Actions to know which pages to protect and which queues to use. 
 These Triggers and Actions are specified in the Go Queue-it self-service portal.
-![Configuration Provider flow](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/ConfigProviderExample.png)
-
 
 There are 3 possible ways you can retrieve the integration config information and provide it for the Known User SDK:
 
 **1. Time based pulling:**
+
+![Configuration Provider flow](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/ConfigProviderExample.png)
+
    In this method, you would have a long running tasks retrieving the latest version of published integration with a sepecified time interval from Queue-it repository with the address **https://[your-customer-id].queue-it.net/status/integrationconfig/secure/[your-customer-id]** then cache and reuse the retrieved value until the next interval. **To prevent unauthorized access to your config file make sure you enable “Secure integration config” setting in the Go Queue-it self-service portal** then provide your API key in the request header to retrieve integration config.
    
    The [IntegrationConfigProvider.cs](https://github.com/queueit/KnownUser.V3.ASPNETCORE/blob/master/Documentation/IntegrationConfigProvider.cs) file is an example of how the download and caching of the configuration can be done. 
