@@ -36,7 +36,7 @@ The configuration specifies a set of Triggers and Actions. A Trigger is an expre
 When a user enter your website and the URL matches a Trigger-expression the corresponding Action will be triggered. 
 The Action specifies which queue the users should be sent to. 
 In this way you can specify which queue(s) should protect which page(s) on the fly without changing the server-side integration.
-More details can be found under [Documentation] (https://github.com/queueit/KnownUser.V3.ASPNETCORE/blob/master/Documentation/)
+More details can be found under [Documentation](https://github.com/queueit/KnownUser.V3.ASPNETCORE/blob/master/Documentation/)
 
 ### 2. Validate the `queueittoken` and store a session cookie
 To validate that the user has been through the queue, use the `KnownUser.ValidateRequestByIntegrationConfig()` method. 
