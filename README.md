@@ -160,3 +160,7 @@ public class KnownUserValidator
    }
 }
 ```
+
+## Helper functions
+The [QueueITHelpers.cs](https://github.com/queueit/KnownUser.V3.ASPNETCORE/blob/master/Documentation/QueueITHelpers.cs) file includes some helper functions 
+to make the reading of the `queueittoken` easier. 
