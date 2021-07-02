@@ -9,6 +9,8 @@ You can find the latest released version [here](https://github.com/queueit/Known
 The KnownUser validation must be done on *all requests except requests for static and cached pages, resources like images, css files and ...*. 
 So, if you add the KnownUser validation logic to a central place like in Startup.cs, then be sure that the Triggers only fire on page requests (including ajax requests) and not on e.g. image.
 
+This example is using the *[IntegrationConfigProvider](https://github.com/queueit/KnownUser.V3.ASPNETCORE/blob/master/Documentation/IntegrationConfigProvider.cs)* to download the queue configuration. The provider is an example of how the download and caching of the configuration can be done. This is just an example, but if you make your own downloader, please cache the result for 5 - 10 minutes to limit number of download requests. **You should NEVER download the configuration as part of the request handling**.
+
 The following method is all that is needed to validate that a user has been through the queue:
 
 *Startup.cs*
