@@ -68,6 +68,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
                 {
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create(configUrl);
                     request.Headers.Add("api-key", _apiKey);
+                    request.Headers.Add("User-Agent", "queueit-connector");
                     request.Timeout = _downloadTimeoutMS;
 
                     using HttpWebResponse response = (HttpWebResponse)request.GetResponse();
@@ -90,7 +91,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
                     ++tryCount;
                     if (tryCount >= 5)
                     {
-                        //Use your favorit logging framework to log the exceptoin
+                        //Use your favorit logging framework to log the exception
                         break;
                     }
                     if (!init)
