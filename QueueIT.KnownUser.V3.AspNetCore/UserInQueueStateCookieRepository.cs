@@ -10,6 +10,8 @@ namespace QueueIT.KnownUser.V3.AspNetCore
             string queueId,
             int? fixedCookieValidityMinutes,
             string cookieDomain,
+            bool isCookieHttpOnly,
+            bool isCookieSecure,
             string redirectType,
             string secretKey);
 
@@ -21,12 +23,16 @@ namespace QueueIT.KnownUser.V3.AspNetCore
 
         void CancelQueueCookie(
             string eventId,
-            string cookieDomain);
+            string cookieDomain,
+            bool isCookieHttpOnly,
+            bool isCookieSecure);
 
         void ReissueQueueCookie(
             string eventId,
             int cookieValidityMinutes,
             string cookieDomain,
+            bool isCookieHttpOnly,
+            bool isCookieSecure,
             string secretKey);
     }
 
@@ -58,15 +64,22 @@ namespace QueueIT.KnownUser.V3.AspNetCore
             string queueId,
             int? fixedCookieValidityMinutes,
             string cookieDomain,
+            bool isCookieHttpOnly,
+            bool isCookieSecure,
             string redirectType,
             string secretKey)
         {
             var cookieKey = GetCookieKey(eventId);
 
             CreateCookie(
-                eventId, queueId,
+                eventId,
+                queueId,
                 Convert.ToString(fixedCookieValidityMinutes),
-                redirectType, cookieDomain, secretKey);
+                redirectType,
+                cookieDomain,
+                isCookieHttpOnly,
+                isCookieSecure,
+                secretKey);
         }
 
         public StateInfo GetState(string eventId,
@@ -110,16 +123,18 @@ namespace QueueIT.KnownUser.V3.AspNetCore
             return HashHelper.GenerateSHA256Hash(secretKey, valueToHash);
         }
 
-        public void CancelQueueCookie(string eventId, string cookieDomain)
+        public void CancelQueueCookie(string eventId, string cookieDomain, bool isCookieHttpOnly, bool isCookieSecure)
         {
             var cookieKey = GetCookieKey(eventId);
-            _httpContextProvider.HttpResponse.SetCookie(cookieKey, string.Empty, cookieDomain, DateTime.UtcNow.AddDays(-1d));
+            _httpContextProvider.HttpResponse.SetCookie(cookieKey, string.Empty, cookieDomain, DateTime.UtcNow.AddDays(-1d), isCookieHttpOnly, isCookieSecure);
         }
 
         public void ReissueQueueCookie(
             string eventId,
             int cookieValidityMinutes,
             string cookieDomain,
+            bool isCookieHttpOnly,
+            bool isCookieSecure,
             string secretKey)
         {
             var cookieKey = GetCookieKey(eventId);
@@ -132,12 +147,16 @@ namespace QueueIT.KnownUser.V3.AspNetCore
 
             if (!IsCookieValid(secretKey, cookieValues, eventId, cookieValidityMinutes, true))
                 return;
-
+            
             CreateCookie(
-                           eventId, cookieValues[_QueueIdKey],
-                           cookieValues[_FixedCookieValidityMinutesKey],
-                           cookieValues[_RedirectTypeKey],
-                           cookieDomain, secretKey);
+                eventId,
+                cookieValues[_QueueIdKey],
+                cookieValues[_FixedCookieValidityMinutesKey],
+                cookieValues[_RedirectTypeKey],
+                cookieDomain,
+                isCookieHttpOnly,
+                isCookieSecure,
+                secretKey);
         }
 
         private void CreateCookie(
@@ -146,6 +165,8 @@ namespace QueueIT.KnownUser.V3.AspNetCore
             string fixedCookieValidityMinutes,
             string redirectType,
             string cookieDomain,
+            bool isCookieHttpOnly,
+            bool isCookieSecure,
             string secretKey)
         {
             var cookieKey = GetCookieKey(eventId);
@@ -163,8 +184,13 @@ namespace QueueIT.KnownUser.V3.AspNetCore
             cookieValues.Add(_IssueTimeKey, issueTime);
             cookieValues.Add(_HashKey, GenerateHash(eventId.ToLower(), queueId, fixedCookieValidityMinutes, redirectType.ToLower(), issueTime, secretKey));
 
-            _httpContextProvider.HttpResponse.SetCookie(cookieKey, CookieHelper.ToValueFromNameValueCollection(cookieValues),
-                cookieDomain, DateTime.UtcNow.AddDays(1));
+            _httpContextProvider.HttpResponse.SetCookie(
+                cookieKey, 
+                CookieHelper.ToValueFromNameValueCollection(cookieValues),
+                cookieDomain,
+                DateTime.UtcNow.AddDays(1),
+                isCookieHttpOnly, 
+                isCookieSecure);
         }
 
         private bool IsCookieValid(

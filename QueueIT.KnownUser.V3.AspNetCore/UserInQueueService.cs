@@ -25,12 +25,14 @@ namespace QueueIT.KnownUser.V3.AspNetCore
             string eventId,
             int cookieValidityMinutes,
             string cookieDomain,
+            bool isCookieHttpOnly,
+            bool isCookieSecure,
             string secretKey);
     }
 
     internal class UserInQueueService : IUserInQueueService
     {
-        internal const string SDK_VERSION = "v3-aspnetcore-" + "3.6.1";
+        internal const string SDK_VERSION = "v3-aspnetcore-" + "3.7.0";
 
         private readonly IUserInQueueStateRepository _userInQueueStateRepository;
 
@@ -55,6 +57,8 @@ namespace QueueIT.KnownUser.V3.AspNetCore
                         state.QueueId,
                         null,
                         config.CookieDomain,
+                        config.IsCookieHttpOnly,
+                        config.IsCookieSecure,
                         state.RedirectType,
                         secretKey);
                 }
@@ -90,7 +94,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore
             
             if (state.IsFound && !isTokenValid)
             {
-                _userInQueueStateRepository.CancelQueueCookie(config.EventId, config.CookieDomain);
+                _userInQueueStateRepository.CancelQueueCookie(config.EventId, config.CookieDomain, config.IsCookieHttpOnly, config.IsCookieSecure);
             }
             
             return requestValidationResult;
@@ -106,6 +110,8 @@ namespace QueueIT.KnownUser.V3.AspNetCore
                 queueParams.QueueId,
                 queueParams.CookieValidityMinutes,
                 config.CookieDomain,
+                config.IsCookieHttpOnly,
+                config.IsCookieSecure,
                 queueParams.RedirectType,
                 secretKey);
 
@@ -191,9 +197,11 @@ namespace QueueIT.KnownUser.V3.AspNetCore
             string eventId,
             int cookieValidityMinutes,
             string cookieDomain,
+            bool isCookieHttpOnly,
+            bool isCookieSecure,
             string secretKey)
         {
-            _userInQueueStateRepository.ReissueQueueCookie(eventId, cookieValidityMinutes, cookieDomain, secretKey);
+            _userInQueueStateRepository.ReissueQueueCookie(eventId, cookieValidityMinutes, cookieDomain, isCookieHttpOnly, isCookieSecure, secretKey);
         }
 
         public RequestValidationResult ValidateCancelRequest(
@@ -207,11 +215,18 @@ namespace QueueIT.KnownUser.V3.AspNetCore
 
             if (state.IsValid)
             {
-                _userInQueueStateRepository.CancelQueueCookie(config.EventId, config.CookieDomain);
+                _userInQueueStateRepository.CancelQueueCookie(config.EventId, config.CookieDomain, config.IsCookieHttpOnly, config.IsCookieSecure);
+
                 var query = GetQueryString(customerId, config.EventId, config.Version, config.ActionName) +
                                 (!string.IsNullOrEmpty(targetUrl) ? $"&r={Uri.EscapeDataString(targetUrl)}" : "");
 
-                var redirectUrl = GenerateRedirectUrl(config.QueueDomain, $"cancel/{customerId}/{config.EventId}/", query);
+                var uriPath = $"cancel/{customerId}/{config.EventId}";
+                if (!string.IsNullOrEmpty(state.QueueId))
+                {
+                    uriPath += $"/{state.QueueId}";
+                }
+
+                var redirectUrl = GenerateRedirectUrl(config.QueueDomain, uriPath, query);
 
                 return new RequestValidationResult(ActionType.CancelAction,
                     redirectUrl: redirectUrl,

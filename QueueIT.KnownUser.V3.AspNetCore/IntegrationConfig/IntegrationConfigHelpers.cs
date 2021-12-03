@@ -58,6 +58,8 @@ namespace QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig
                     return UserAgentValidatorHelper.Evaluate(triggerPart, request.UserAgent);
                 case ValidatorType.HttpHeaderValidator:
                     return HttpHeaderValidatorHelper.Evaluate(triggerPart, request.Headers);
+                case ValidatorType.RequestBodyValidator:
+                    return RequestBodyValidatorHelper.Evaluate(triggerPart, request.GetRequestBodyAsString());
                 default:
                     return false;
             }
@@ -175,6 +177,19 @@ namespace QueueIT.KnownUser.V3.AspNetCore.IntegrationConfig
                 triggerPart.IsNegative,
                 triggerPart.IsIgnoreCase,
                 httpHeaders?.Get(triggerPart.HttpHeaderName) ?? string.Empty,
+                triggerPart.ValueToCompare,
+                triggerPart.ValuesToCompare);
+        }
+    }
+
+    internal static class RequestBodyValidatorHelper
+    {
+        public static bool Evaluate(TriggerPart triggerPart, string bodyValue)
+        {
+            return ComparisonOperatorHelper.Evaluate(triggerPart.Operator,
+                triggerPart.IsNegative,
+                triggerPart.IsIgnoreCase,
+                bodyValue ?? string.Empty,
                 triggerPart.ValueToCompare,
                 triggerPart.ValuesToCompare);
         }

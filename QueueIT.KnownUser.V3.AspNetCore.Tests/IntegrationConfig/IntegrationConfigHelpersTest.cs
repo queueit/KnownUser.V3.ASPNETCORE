@@ -61,7 +61,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         [Fact]
         public void Evaluate_Test()
         {
-            var triggerPart = new TriggerPart()
+            var triggerPart = new TriggerPart
             {
                 CookieName = "c1",
                 Operator = ComparisonOperatorType.Contains,
@@ -97,7 +97,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         [Fact]
         public void Evaluate_Test()
         {
-            var triggerPart = new TriggerPart()
+            var triggerPart = new TriggerPart
             {
                 UrlPart = UrlPartType.PageUrl,
                 Operator = ComparisonOperatorType.Contains,
@@ -132,7 +132,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         [Fact]
         public void Evaluate_Test()
         {
-            var triggerPart = new TriggerPart()
+            var triggerPart = new TriggerPart
             {
                 Operator = ComparisonOperatorType.Contains,
                 ValueToCompare = "googlebot"
@@ -177,13 +177,13 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         [Fact]
         public void Evaluate_Test()
         {
-            var triggerPart = new TriggerPart()
+            var triggerPart = new TriggerPart
             {
                 HttpHeaderName = "c1",
                 Operator = ComparisonOperatorType.Contains,
                 ValueToCompare = "1"
             };
-            var httpHeaders = new NameValueCollection() { };
+            var httpHeaders = new NameValueCollection { };
             Assert.False(HttpHeaderValidatorHelper.Evaluate(triggerPart, httpHeaders));
 
             httpHeaders.Add("c5", "5");
@@ -207,6 +207,42 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         }
     }
 
+    public class RequestBodyValidatorHelperTest
+    {
+        [Fact]
+        public void Evaluate_Test()
+        {
+            var triggerPart = new TriggerPart
+            {
+                Operator = ComparisonOperatorType.Contains,
+                ValueToCompare = "test body"
+            };
+            var request = new KnownUserTest.MockHttpRequest();
+            Assert.False(RequestBodyValidatorHelper.Evaluate(triggerPart, request.GetRequestBodyAsString()));
+
+            request.Body = "test body";
+
+            Assert.True(RequestBodyValidatorHelper.Evaluate(triggerPart, request.GetRequestBodyAsString()));
+
+            triggerPart.ValueToCompare = "ZZZ";
+            Assert.False(RequestBodyValidatorHelper.Evaluate(triggerPart, request.GetRequestBodyAsString()));
+            
+            triggerPart.ValueToCompare = "Test";
+            triggerPart.IsIgnoreCase = true;
+            Assert.True(RequestBodyValidatorHelper.Evaluate(triggerPart, request.GetRequestBodyAsString()));
+
+            triggerPart.ValueToCompare = "Test";
+            triggerPart.IsIgnoreCase = true;
+            triggerPart.IsNegative = true;
+            Assert.False(RequestBodyValidatorHelper.Evaluate(triggerPart, request.GetRequestBodyAsString()));
+
+            triggerPart.ValueToCompare = "Test";
+            triggerPart.IsIgnoreCase = true;
+            triggerPart.IsNegative = true;
+            Assert.False(RequestBodyValidatorHelper.Evaluate(triggerPart, request.GetRequestBodyAsString()));
+        }
+    }
+
     public class IntegrationEvaluatorTest
     {
         [Fact]
@@ -214,38 +250,40 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         {
             var testObject = new IntegrationEvaluator();
 
-            var customerIntegration = new CustomerIntegration()
+            var customerIntegration = new CustomerIntegration
             {
-                Integrations = new List<IntegrationConfigModel> {
-                     new IntegrationConfigModel()
-                     {
-
-                         Triggers = new List<TriggerModel>() {
-                                                new TriggerModel() {
-                                                    LogicalOperator = LogicalOperatorType.Or,
-                                                    TriggerParts = new List<TriggerPart>() {
-                                                            new TriggerPart() {
-                                                                CookieName ="c1",
-                                                                Operator = ComparisonOperatorType.EqualS,
-                                                                ValueToCompare ="value1",
-                                                                ValidatorType= ValidatorType.CookieValidator
-                                                            },
-                                                            new TriggerPart() {
-
-                                                                ValidatorType= ValidatorType.UserAgentValidator,
-                                                                ValueToCompare= "test",
-                                                                Operator= ComparisonOperatorType.Contains
-                                                                }
-                                                        }
-                                                    }
+                Integrations = new List<IntegrationConfigModel>
+                {
+                    new IntegrationConfigModel
+                    {
+                        Triggers = new List<TriggerModel>
+                        {
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.Or,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        CookieName = "c1",
+                                        Operator = ComparisonOperatorType.EqualS,
+                                        ValueToCompare = "value1",
+                                        ValidatorType = ValidatorType.CookieValidator
+                                    },
+                                    new TriggerPart
+                                    {
+                                        ValidatorType = ValidatorType.UserAgentValidator,
+                                        ValueToCompare = "test",
+                                        Operator = ComparisonOperatorType.Contains
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-              }
             };
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
-
-
 
             Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri,
                 new KnownUserTest.MockHttpRequest()) == null);
@@ -256,44 +294,48 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         {
             var testObject = new IntegrationEvaluator();
 
-            var customerIntegration = new CustomerIntegration()
+            var customerIntegration = new CustomerIntegration
             {
-
-                Integrations = new List<IntegrationConfigModel> {
-                                             new IntegrationConfigModel()
-                                             {
-                                                 Name= "integration1",
-                                                 Triggers = new List<TriggerModel>() {
-                                                            new TriggerModel() {
-                                                                LogicalOperator = LogicalOperatorType.And,
-                                                                TriggerParts = new List<TriggerPart>() {
-                                                                    new TriggerPart() {
-                                                                        CookieName ="c1",
-                                                                        Operator = ComparisonOperatorType.EqualS,
-                                                                        IsIgnoreCase= true,
-                                                                        ValueToCompare ="value1",
-                                                                        ValidatorType= ValidatorType.CookieValidator
-                                                                    },
-                                                                    new TriggerPart() {
-                                                                        UrlPart = UrlPartType.PageUrl,
-                                                                        ValidatorType= ValidatorType.UrlValidator,
-                                                                        ValueToCompare= "test",
-                                                                        Operator= ComparisonOperatorType.Contains
-                                                                        }
-
-                                                                }
-                                                    }
-                                              }
-                                            }
-
-            }
+                Integrations = new List<IntegrationConfigModel>
+                {
+                    new IntegrationConfigModel
+                    {
+                        Name = "integration1",
+                        Triggers = new List<TriggerModel>
+                        {
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.And,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        CookieName = "c1",
+                                        Operator = ComparisonOperatorType.EqualS,
+                                        IsIgnoreCase = true,
+                                        ValueToCompare = "value1",
+                                        ValidatorType = ValidatorType.CookieValidator
+                                    },
+                                    new TriggerPart
+                                    {
+                                        UrlPart = UrlPartType.PageUrl,
+                                        ValidatorType = ValidatorType.UrlValidator,
+                                        ValueToCompare = "test",
+                                        Operator = ComparisonOperatorType.Contains
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             };
 
-
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
-
-
-            var httpRequestMock = new KnownUserTest.MockHttpRequest() { CookiesValue = new NameValueCollection() { { "c1", "Value1" } } };
+            
+            var httpRequestMock = new KnownUserTest.MockHttpRequest
+            {
+                CookiesValue = new NameValueCollection {{"c1", "Value1"}}
+            };
             Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock).Name == "integration1");
         }
 
@@ -302,52 +344,55 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         {
             var testObject = new IntegrationEvaluator();
 
-            var customerIntegration = new CustomerIntegration()
+            var customerIntegration = new CustomerIntegration
             {
-
-                Integrations = new List<IntegrationConfigModel> {
-                                             new IntegrationConfigModel()
-                                             {
-                                                 Name= "integration1",
-                                                 Triggers = new List<TriggerModel>() {
-                                                            new TriggerModel() {
-                                                                LogicalOperator = LogicalOperatorType.And,
-                                                                TriggerParts = new List<TriggerPart>() {
-                                                                    new TriggerPart() {
-                                                                        CookieName ="c1",
-                                                                        Operator = ComparisonOperatorType.EqualS,
-                                                                        IsIgnoreCase= true,
-                                                                        ValueToCompare ="value1",
-                                                                        ValidatorType= ValidatorType.CookieValidator
-                                                                    },
-                                                                    new TriggerPart() {
-                                                                        UrlPart = UrlPartType.PageUrl,
-                                                                        ValidatorType= ValidatorType.UrlValidator,
-                                                                        ValueToCompare= "test",
-                                                                        Operator= ComparisonOperatorType.Contains
-                                                                        },
-                                                                   new TriggerPart() {
-                                                                        ValidatorType= ValidatorType.UserAgentValidator,
-                                                                        ValueToCompare= "Googlebot",
-                                                                        Operator= ComparisonOperatorType.Contains,
-                                                                        IsIgnoreCase= true,
-                                                                        IsNegative= true
-                                                                        }
-
-                                                                }
-                                                    }
-                                              }
-                                            }
-
-            }
+                Integrations = new List<IntegrationConfigModel>
+                {
+                    new IntegrationConfigModel
+                    {
+                        Name = "integration1",
+                        Triggers = new List<TriggerModel>
+                        {
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.And,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        CookieName = "c1",
+                                        Operator = ComparisonOperatorType.EqualS,
+                                        IsIgnoreCase = true,
+                                        ValueToCompare = "value1",
+                                        ValidatorType = ValidatorType.CookieValidator
+                                    },
+                                    new TriggerPart
+                                    {
+                                        UrlPart = UrlPartType.PageUrl,
+                                        ValidatorType = ValidatorType.UrlValidator,
+                                        ValueToCompare = "test",
+                                        Operator = ComparisonOperatorType.Contains
+                                    },
+                                    new TriggerPart
+                                    {
+                                        ValidatorType = ValidatorType.UserAgentValidator,
+                                        ValueToCompare = "Googlebot",
+                                        Operator = ComparisonOperatorType.Contains,
+                                        IsIgnoreCase = true,
+                                        IsNegative = true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             };
-
-
+            
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
 
-            var httpRequestMock = new KnownUserTest.MockHttpRequest()
+            var httpRequestMock = new KnownUserTest.MockHttpRequest
             {
-                CookiesValue = new NameValueCollection() { { "c1", "Value1" } },
+                CookiesValue = new NameValueCollection { { "c1", "Value1" } },
                 UserAgent = "bot.html google.com googlebot test"
             };
             Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock) == null);
@@ -358,55 +403,57 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         {
             var testObject = new IntegrationEvaluator();
 
-            var customerIntegration = new CustomerIntegration()
+            var customerIntegration = new CustomerIntegration
             {
-
-                Integrations = new List<IntegrationConfigModel> {
-                                             new IntegrationConfigModel()
-                                             {
-                                                 Name= "integration1",
-                                                 Triggers = new List<TriggerModel>() {
-                                                            new TriggerModel() {
-                                                                LogicalOperator = LogicalOperatorType.And,
-                                                                TriggerParts = new List<TriggerPart>() {
-                                                                    new TriggerPart() {
-                                                                        CookieName ="c1",
-                                                                        Operator = ComparisonOperatorType.EqualS,
-                                                                        IsIgnoreCase= true,
-                                                                        ValueToCompare ="value1",
-                                                                        ValidatorType= ValidatorType.CookieValidator
-                                                                    },
-                                                                    new TriggerPart() {
-                                                                        UrlPart = UrlPartType.PageUrl,
-                                                                        ValidatorType= ValidatorType.UrlValidator,
-                                                                        ValueToCompare= "test",
-                                                                        Operator= ComparisonOperatorType.Contains
-                                                                        },
-                                                                   new TriggerPart() {
-                                                                       HttpHeaderName = "Akamai-bot",
-                                                                       ValidatorType = ValidatorType.HttpHeaderValidator,
-                                                                        ValueToCompare= "bot",
-                                                                        Operator= ComparisonOperatorType.Contains,
-                                                                        IsIgnoreCase= true,
-                                                                        IsNegative= true
-                                                                        }
-
-                                                                }
-                                                    }
-                                              }
-                                            }
-
-            }
+                Integrations = new List<IntegrationConfigModel>
+                {
+                    new IntegrationConfigModel
+                    {
+                        Name = "integration1",
+                        Triggers = new List<TriggerModel>
+                        {
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.And,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        CookieName = "c1",
+                                        Operator = ComparisonOperatorType.EqualS,
+                                        IsIgnoreCase = true,
+                                        ValueToCompare = "value1",
+                                        ValidatorType = ValidatorType.CookieValidator
+                                    },
+                                    new TriggerPart
+                                    {
+                                        UrlPart = UrlPartType.PageUrl,
+                                        ValidatorType = ValidatorType.UrlValidator,
+                                        ValueToCompare = "test",
+                                        Operator = ComparisonOperatorType.Contains
+                                    },
+                                    new TriggerPart
+                                    {
+                                        HttpHeaderName = "Akamai-bot",
+                                        ValidatorType = ValidatorType.HttpHeaderValidator,
+                                        ValueToCompare = "bot",
+                                        Operator = ComparisonOperatorType.Contains,
+                                        IsIgnoreCase = true,
+                                        IsNegative = true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             };
-
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
 
-
-            var httpRequestMock = new KnownUserTest.MockHttpRequest()
+            var httpRequestMock = new KnownUserTest.MockHttpRequest
             {
-                CookiesValue = new NameValueCollection() { { "c1", "Value1" } },
-                Headers = new NameValueCollection() { { "Akamai-bot", "bot" } }
+                CookiesValue = new NameValueCollection { { "c1", "Value1" } },
+                Headers = new NameValueCollection { { "Akamai-bot", "bot" } }
             };
             Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock) == null);
         }
@@ -415,46 +462,48 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         public void GetMatchedIntegrationConfig_OneTrigger_Or_NotMatched()
         {
             var testObject = new IntegrationEvaluator();
-            var customerIntegration = new CustomerIntegration()
+            var customerIntegration = new CustomerIntegration
             {
-
-                Integrations = new List<IntegrationConfigModel> {
-                                             new IntegrationConfigModel()
-                                             {
-                                                 Name= "integration1",
-                                                 Triggers = new List<TriggerModel>() {
-                                                                 new TriggerModel() {
-                                                                    LogicalOperator = LogicalOperatorType.Or,
-                                                                    TriggerParts = new List<TriggerPart>() {
-                                                                        new TriggerPart() {
-                                                                            CookieName ="c1",
-                                                                            Operator = ComparisonOperatorType.EqualS,
-                                                                            ValueToCompare ="value1",
-                                                                            ValidatorType= ValidatorType.CookieValidator
-                                                                        },
-                                                                        new TriggerPart() {
-                                                                            UrlPart = UrlPartType.PageUrl,
-                                                                            ValidatorType= ValidatorType.UrlValidator,
-                                                                             IsIgnoreCase= true,
-                                                                            IsNegative= true,
-                                                                            ValueToCompare= "tesT",
-                                                                            Operator= ComparisonOperatorType.Contains
-                                                                            }
-
-                                                                    }
-                                                                }
-                                                    }
-                                              }
-                                            }
-
+                Integrations = new List<IntegrationConfigModel>
+                {
+                    new IntegrationConfigModel
+                    {
+                        Name = "integration1",
+                        Triggers = new List<TriggerModel>
+                        {
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.Or,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        CookieName = "c1",
+                                        Operator = ComparisonOperatorType.EqualS,
+                                        ValueToCompare = "value1",
+                                        ValidatorType = ValidatorType.CookieValidator
+                                    },
+                                    new TriggerPart
+                                    {
+                                        UrlPart = UrlPartType.PageUrl,
+                                        ValidatorType = ValidatorType.UrlValidator,
+                                        IsIgnoreCase = true,
+                                        IsNegative = true,
+                                        ValueToCompare = "tesT",
+                                        Operator = ComparisonOperatorType.Contains
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             };
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
 
-
-            var httpRequestMock = new KnownUserTest.MockHttpRequest()
+            var httpRequestMock = new KnownUserTest.MockHttpRequest
             {
-                CookiesValue = new NameValueCollection() { { "c2", "value1" } }
+                CookiesValue = new NameValueCollection { { "c2", "value1" } }
             };
             Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock) == null);
         }
@@ -463,43 +512,45 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         public void GetMatchedIntegrationConfig_OneTrigger_Or_Matched()
         {
             var testObject = new IntegrationEvaluator();
-            var customerIntegration = new CustomerIntegration()
+            var customerIntegration = new CustomerIntegration
             {
-
-                Integrations = new List<IntegrationConfigModel> {
-                                             new IntegrationConfigModel()
-                                             {
-                                                 Name= "integration1",
-                                                 Triggers = new List<TriggerModel>() {
-                                                           new TriggerModel() {
-                                                                LogicalOperator = LogicalOperatorType.Or,
-                                                                TriggerParts = new List<TriggerPart>() {
-                                                                    new TriggerPart() {
-                                                                        CookieName ="c1",
-                                                                        Operator = ComparisonOperatorType.EqualS,
-                                                                        ValueToCompare ="value1",
-                                                                        ValidatorType= ValidatorType.CookieValidator
-                                                                    },
-                                                                    new TriggerPart() {
-                                                                        UrlPart = UrlPartType.PageUrl,
-                                                                        ValidatorType= ValidatorType.UrlValidator,
-                                                                        ValueToCompare= "tesT",
-                                                                        Operator= ComparisonOperatorType.Contains
-                                                                        }
-
-                                                                }
-                                                        }
-                                                    }
-                                              }
-                                            }
-
+                Integrations = new List<IntegrationConfigModel>
+                {
+                    new IntegrationConfigModel
+                    {
+                        Name = "integration1",
+                        Triggers = new List<TriggerModel>
+                        {
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.Or,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        CookieName = "c1",
+                                        Operator = ComparisonOperatorType.EqualS,
+                                        ValueToCompare = "value1",
+                                        ValidatorType = ValidatorType.CookieValidator
+                                    },
+                                    new TriggerPart
+                                    {
+                                        UrlPart = UrlPartType.PageUrl,
+                                        ValidatorType = ValidatorType.UrlValidator,
+                                        ValueToCompare = "tesT",
+                                        Operator = ComparisonOperatorType.Contains
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             };
 
-
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
-            var httpRequestMock = new KnownUserTest.MockHttpRequest()
+            var httpRequestMock = new KnownUserTest.MockHttpRequest
             {
-                CookiesValue = new NameValueCollection() { { "c1", "value1" } }
+                CookiesValue = new NameValueCollection { { "c1", "value1" } }
             };
             Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock).Name == "integration1");
         }
@@ -508,46 +559,47 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         public void GetMatchedIntegrationConfig_TwoTriggers_Matched()
         {
             var testObject = new IntegrationEvaluator();
-            var customerIntegration = new CustomerIntegration()
+            var customerIntegration = new CustomerIntegration
             {
-
-                Integrations = new List<IntegrationConfigModel> {
-                                             new IntegrationConfigModel()
-                                             {
-                                                 Name= "integration1",
-                                                 Triggers = new List<TriggerModel>() {
-                                                        new TriggerModel() {
-                                                        LogicalOperator = LogicalOperatorType.And,
-                                                        TriggerParts = new List<TriggerPart>() {
-                                                            new TriggerPart() {
-                                                                CookieName ="c1",
-                                                                Operator = ComparisonOperatorType.EqualS,
-                                                                ValueToCompare ="value1",
-                                                                ValidatorType= ValidatorType.CookieValidator
-                                                            }
-
-
-                                                        }
-                                                    },
-                                                        new TriggerModel()
-                                                        {
-                                                            LogicalOperator = LogicalOperatorType.And,
-                                                            TriggerParts = new List<TriggerPart>()
-                                                            {
-                                                              new TriggerPart() {
-                                                                    UrlPart = UrlPartType.PageUrl,
-                                                                    ValidatorType= ValidatorType.UrlValidator,
-                                                                    ValueToCompare= "*",
-                                                                    Operator= ComparisonOperatorType.Contains
-                                                                    }
-                                                            }
-                                                         }
-                                                  }
-                                              }
-                                     }
-
+                Integrations = new List<IntegrationConfigModel>
+                {
+                    new IntegrationConfigModel
+                    {
+                        Name = "integration1",
+                        Triggers = new List<TriggerModel>
+                        {
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.And,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        CookieName = "c1",
+                                        Operator = ComparisonOperatorType.EqualS,
+                                        ValueToCompare = "value1",
+                                        ValidatorType = ValidatorType.CookieValidator
+                                    }
+                                }
+                            },
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.And,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        UrlPart = UrlPartType.PageUrl,
+                                        ValidatorType = ValidatorType.UrlValidator,
+                                        ValueToCompare = "*",
+                                        Operator = ComparisonOperatorType.Contains
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             };
-
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
 
@@ -559,44 +611,46 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         public void GetMatchedIntegrationConfig_TwoTriggers_NotMatched()
         {
             var testObject = new IntegrationEvaluator();
-            var customerIntegration = new CustomerIntegration()
+            var customerIntegration = new CustomerIntegration
             {
-
-                Integrations = new List<IntegrationConfigModel> {
-                                             new IntegrationConfigModel()
-                                             {
-                                                 Name= "integration1",
-                                                 Triggers = new List<TriggerModel>() {
-                                                        new TriggerModel() {
-                                                            LogicalOperator = LogicalOperatorType.And,
-                                                            TriggerParts = new List<TriggerPart>() {
-                                                                new TriggerPart() {
-                                                                    CookieName ="c1",
-                                                                    Operator = ComparisonOperatorType.EqualS,
-                                                                    ValueToCompare ="value1",
-                                                                    ValidatorType= ValidatorType.CookieValidator
-                                                                }
-
-
-                                                            }
-                                                        },
-                                                        new TriggerModel()
-                                                        {
-                                                            LogicalOperator = LogicalOperatorType.And,
-                                                            TriggerParts = new List<TriggerPart>()
-                                                            {
-                                                                 new TriggerPart() {
-                                                                    UrlPart = UrlPartType.PageUrl,
-                                                                    ValidatorType= ValidatorType.UrlValidator,
-                                                                    ValueToCompare= "tesT",
-                                                                    Operator= ComparisonOperatorType.Contains
-                                                                    }
-                                                            }
-                                                        }
-                                                  }
-                                              }
-                                     }
-
+                Integrations = new List<IntegrationConfigModel>
+                {
+                    new IntegrationConfigModel
+                    {
+                        Name = "integration1",
+                        Triggers = new List<TriggerModel>
+                        {
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.And,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        CookieName = "c1",
+                                        Operator = ComparisonOperatorType.EqualS,
+                                        ValueToCompare = "value1",
+                                        ValidatorType = ValidatorType.CookieValidator
+                                    }
+                                }
+                            },
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.And,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        UrlPart = UrlPartType.PageUrl,
+                                        ValidatorType = ValidatorType.UrlValidator,
+                                        ValueToCompare = "tesT",
+                                        Operator = ComparisonOperatorType.Contains
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             };
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
@@ -609,77 +663,82 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests.IntegrationConfig
         public void GetMatchedIntegrationConfig_ThreeIntegrationsInOrder_SecondMatched()
         {
             var testObject = new IntegrationEvaluator();
-            var customerIntegration = new CustomerIntegration()
+            var customerIntegration = new CustomerIntegration
             {
+                Integrations = new List<IntegrationConfigModel>
+                {
+                    new IntegrationConfigModel
+                    {
+                        Name = "integration0",
+                        Triggers = new List<TriggerModel>
+                        {
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.And,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        CookieName = "c1",
+                                        Operator = ComparisonOperatorType.EqualS,
+                                        ValueToCompare = "value1",
+                                        ValidatorType = ValidatorType.CookieValidator
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    new IntegrationConfigModel
+                    {
+                        Name = "integration1",
+                        Triggers = new List<TriggerModel>
+                        {
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.And,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        CookieName = "c1",
+                                        Operator = ComparisonOperatorType.EqualS,
+                                        ValueToCompare = "Value1",
+                                        ValidatorType = ValidatorType.CookieValidator
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    new IntegrationConfigModel
+                    {
+                        Name = "integration2",
+                        Triggers = new List<TriggerModel>
+                        {
+                            new TriggerModel
+                            {
+                                LogicalOperator = LogicalOperatorType.And,
+                                TriggerParts = new List<TriggerPart>
+                                {
+                                    new TriggerPart
+                                    {
+                                        UrlPart = UrlPartType.PageUrl,
+                                        Operator = ComparisonOperatorType.Contains,
 
-                Integrations = new List<IntegrationConfigModel> {
-                                             new IntegrationConfigModel()
-                                             {
-                                                 Name= "integration0",
-                                                 Triggers = new List<TriggerModel>() {
-                                                        new TriggerModel() {
-                                                            LogicalOperator = LogicalOperatorType.And,
-                                                            TriggerParts = new List<TriggerPart>() {
-                                                                new TriggerPart() {
-                                                                    CookieName ="c1",
-                                                                    Operator = ComparisonOperatorType.EqualS,
-                                                                    ValueToCompare ="value1",
-                                                                    ValidatorType= ValidatorType.CookieValidator
-                                                                }
-
-
-                                                            }
-                                                        }
-                                                  }
-                                              },
-                                               new IntegrationConfigModel()
-                                             {
-                                                 Name= "integration1",
-                                                 Triggers = new List<TriggerModel>() {
-                                                        new TriggerModel() {
-                                                            LogicalOperator = LogicalOperatorType.And,
-                                                            TriggerParts = new List<TriggerPart>() {
-                                                                new TriggerPart() {
-                                                                    CookieName ="c1",
-                                                                    Operator = ComparisonOperatorType.EqualS,
-                                                                    ValueToCompare ="Value1",
-                                                                    ValidatorType= ValidatorType.CookieValidator
-                                                                }
-
-
-                                                            }
-                                                        }
-                                                  }
-                                              },
-                                              new IntegrationConfigModel()
-                                             {
-                                                 Name= "integration2",
-                                                 Triggers = new List<TriggerModel>() {
-                                                        new TriggerModel() {
-                                                            LogicalOperator = LogicalOperatorType.And,
-                                                            TriggerParts = new List<TriggerPart>() {
-                                                                new TriggerPart() {
-                                                                    UrlPart= UrlPartType.PageUrl,
-                                                                    Operator = ComparisonOperatorType.Contains,
-
-                                                                    ValueToCompare ="test",
-                                                                    ValidatorType= ValidatorType.UrlValidator
-                                                                }
-
-
-                                                            }
-                                                        }
-                                                  }
-                                              }
-                                     }
-
+                                        ValueToCompare = "test",
+                                        ValidatorType = ValidatorType.UrlValidator
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             };
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
 
-            var httpRequestMock = new KnownUserTest.MockHttpRequest()
+            var httpRequestMock = new KnownUserTest.MockHttpRequest
             {
-                CookiesValue = new NameValueCollection() { { "c1", "Value1" } }
+                CookiesValue = new NameValueCollection { { "c1", "Value1" } }
             };
             Assert.False(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock).Name == "integration2");
         }

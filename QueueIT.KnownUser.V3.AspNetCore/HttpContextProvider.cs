@@ -7,60 +7,70 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace QueueIT.KnownUser.V3.AspNetCore
 {
-    public class SDKInitializer
+    public static class SDKInitializer
     {
         public static void SetHttpContext(HttpContext context)
         {
             HttpContextProvider.SetHttpContext(context);
         }
+
+        public static void SetHttpRequest(IHttpRequest httpRequest)
+        {
+            HttpContextProvider.SetHttpRequest(httpRequest);
+        }
     }
 
-    class HttpContextProvider : IHttpContextProvider
+    internal class HttpContextProvider : IHttpContextProvider
     {
-        IHttpRequest _httpRequest;
+        private IHttpRequest _httpRequest;
         public IHttpRequest HttpRequest
         {
             get
             {
                 if (_httpRequest == null)
                 {
-                    throw new Exception("Call HttpContextProvider.SetHttpContext to config SDK");
+                    throw new Exception("Call SDKInitializer.SetHttpContext to configure SDK");
                 }
+
                 return _httpRequest;
             }
         }
-        IHttpResponse _httpResponse;
+
+        private IHttpResponse _httpResponse;
         public IHttpResponse HttpResponse
         {
             get
             {
                 if (_httpResponse == null)
                 {
-                    throw new Exception("Call HttpContextProvider.SetHttpContext to config SDK");
+                    throw new Exception("Call SDKInitializer.SetHttpContext to configure SDK");
                 }
+
                 return _httpResponse;
             }
         }
-        public static IHttpContextProvider Instance
-        {
-            get;
-            private set;
-        } = new HttpContextProvider();
+
+        public static IHttpContextProvider Instance { get; } = new HttpContextProvider();
 
         public static void SetHttpContext(HttpContext context)
         {
-            (Instance as HttpContextProvider)._httpRequest = new HttpRequest(context);
-            (Instance as HttpContextProvider)._httpResponse = new HttpResponse(context);
+            ((HttpContextProvider)Instance)._httpRequest = new HttpRequest(context);
+            ((HttpContextProvider)Instance)._httpResponse = new HttpResponse(context);
+        }
+
+        public static void SetHttpRequest(IHttpRequest httpRequest)
+        {
+            ((HttpContextProvider)Instance)._httpRequest = httpRequest;
         }
     }
 
-    class HttpRequest : IHttpRequest
+    public class HttpRequest : IHttpRequest
     {
-        HttpContext _context;
+        private HttpContext _context;
 
         public HttpRequest(HttpContext context)
         {
-            this._context = context;
+            _context = context;
             Headers = new NameValueCollection();
             foreach (var name in _context.Request.Headers.Keys)
             {
@@ -71,9 +81,9 @@ namespace QueueIT.KnownUser.V3.AspNetCore
 
         public string UserAgent => _context.Request.Headers["User-Agent"].ToString();
 
-        public NameValueCollection Headers { get; private set; }
+        public NameValueCollection Headers { get; }
 
-        public Uri Url { get; private set; }
+        public Uri Url { get; }
 
         public string UserHostAddress => _context.Connection.RemoteIpAddress.ToString();
 
@@ -81,19 +91,30 @@ namespace QueueIT.KnownUser.V3.AspNetCore
         {
             return _context.Request.Cookies[cookieKey];
         }
+
+        public virtual string GetRequestBodyAsString()
+        {
+            return string.Empty;
+        }
     }
 
-    class HttpResponse : IHttpResponse
+    internal class HttpResponse : IHttpResponse
     {
-        HttpContext _context;
+        private HttpContext _context;
+
         public HttpResponse(HttpContext context)
         {
-            this._context = context;
+            _context = context;
         }
 
-        public void SetCookie(string cookieName, string cookieValue, string domain, DateTime expiration)
+        public void SetCookie(string cookieName, string cookieValue, string domain, DateTime expiration, bool isHttpOnly, bool isSecure)
         {
-            var cookieOptions = new CookieOptions() { Expires = expiration, HttpOnly = false, Secure = false };
+            var cookieOptions = new CookieOptions
+            {
+                Expires = expiration,
+                HttpOnly = isHttpOnly,
+                Secure = isSecure,
+            };
 
             if (!string.IsNullOrEmpty(domain))
             {

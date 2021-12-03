@@ -22,10 +22,16 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             public NameValueCollection Headers { get; set; }
             public string UserAgent { get; set; }
             public Uri Url { get; set; }
+            public string Body { get; set; }
 
             public string GetCookieValue(string cookieKey)
             {
                 return this.CookiesValue[cookieKey];
+            }
+
+            public string GetRequestBodyAsString()
+            {
+                return Body ?? string.Empty;
             }
         }
 
@@ -34,15 +40,19 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             public Dictionary<string, Dictionary<string, object>> CookiesValue { get; set; } =
                 new Dictionary<string, Dictionary<string, object>>();
 
-            public void SetCookie(string cookieName, string cookieValue, string domain, DateTime expiration)
+            public void SetCookie(string cookieName, string cookieValue, string domain, DateTime expiration, bool isHttpOnly, bool isSecure)
             {
                 CookiesValue.Add(cookieName,
-                    new Dictionary<string, object>() {
-                                        { nameof(cookieName), cookieName},
-                                        { nameof(cookieValue), cookieValue},
-                                        { nameof(domain), domain},
-                                        { nameof(expiration), expiration}}
-                    );
+                    new Dictionary<string, object>
+                    {
+                        {nameof(cookieName), cookieName},
+                        {nameof(cookieValue), cookieValue},
+                        {nameof(domain), domain},
+                        {nameof(expiration), expiration},
+                        {nameof(isHttpOnly), isHttpOnly},
+                        {nameof(isSecure), isSecure},
+                    }
+                );
             }
         }
 
@@ -85,12 +95,14 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
                 return new RequestValidationResult("Queue");
             }
 
-            public void ExtendQueueCookie(string eventId, int cookieValidityMinute, string cookieDomain, string secretKey)
+            public void ExtendQueueCookie(string eventId, int cookieValidityMinute, string cookieDomain, bool isCookieHttpOnly, bool isCookieSecure, string secretKey)
             {
                 List<string> args = new List<string>();
                 args.Add(eventId);
                 args.Add(cookieValidityMinute.ToString());
                 args.Add(cookieDomain);
+                args.Add(isCookieHttpOnly.ToString());
+                args.Add(isCookieSecure.ToString());
                 args.Add(secretKey);
                 extendQueueCookieCalls.Add(args);
             }
@@ -116,7 +128,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
 
             public RequestValidationResult GetIgnoreResult(string actionName)
             {
-                ignoreRequestCalls.Add(new List<string>() { actionName });
+                ignoreRequestCalls.Add(new List<string> { actionName });
                 return new RequestValidationResult("Ignore");
             }
         }
@@ -150,11 +162,11 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void CancelRequestByLocalConfig_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
-            var cancelEventConfig = new CancelEventConfig() { CookieDomain = "cookiedomain", EventId = "eventid", QueueDomain = "queuedomain", Version = 1, ActionName = "CancelAction" };
+            var cancelEventConfig = new CancelEventConfig { CookieDomain = "cookiedomain", EventId = "eventid", QueueDomain = "queuedomain", Version = 1, ActionName = "CancelAction" };
             // Act
             var result = KnownUser.CancelRequestByLocalConfig("url", "queueitToken", cancelEventConfig, "customerid", "secretekey");
 
@@ -171,15 +183,14 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void CancelRequestByLocalConfig_AjaxCall_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock()
+            var httpContextMock = new HttpContextMock
             {
-                HttpRequest = new MockHttpRequest()
-                { Headers = new NameValueCollection() { { "x-queueit-ajaxpageurl", "http%3A%2F%2Furl" } } }
+                HttpRequest = new MockHttpRequest { Headers = new NameValueCollection { { "x-queueit-ajaxpageurl", "http%3A%2F%2Furl" } } }
             };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
-            var cancelEventConfig = new CancelEventConfig() { CookieDomain = "cookiedomain", EventId = "eventid", QueueDomain = "queuedomain", Version = 1, ActionName = "CancelAction" };
+            var cancelEventConfig = new CancelEventConfig { CookieDomain = "cookiedomain", EventId = "eventid", QueueDomain = "queuedomain", Version = 1, ActionName = "CancelAction" };
             // Act
             var result = KnownUser.CancelRequestByLocalConfig("url", "queueitToken", cancelEventConfig, "customerid", "secretekey");
 
@@ -197,7 +208,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void CancelRequestByLocalConfig_NullQueueDomain_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -227,7 +238,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void CancelRequestByLocalConfig_EventIdNull_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -256,7 +267,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void CancelRequestByLocalConfig_CancelEventConfigNull_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -281,7 +292,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void CancelRequestByLocalConfig_CustomerIdNull_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -306,7 +317,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void CancelRequestByLocalConfig_SeceretKeyNull_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -331,7 +342,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void CancelRequestByLocalConfig_TargetUrl_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -363,7 +374,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             // Act
             try
             {
-                KnownUser.ExtendQueueCookie(null, 0, null, null);
+                KnownUser.ExtendQueueCookie(null, 0, null, false, false, null);
             }
             catch (ArgumentException ex)
             {
@@ -386,7 +397,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             // Act
             try
             {
-                KnownUser.ExtendQueueCookie("eventId", 0, "cookiedomain", null);
+                KnownUser.ExtendQueueCookie("eventId", 0, "cookiedomain", false, false, null);
             }
             catch (ArgumentException ex)
             {
@@ -409,7 +420,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             // Act
             try
             {
-                KnownUser.ExtendQueueCookie("eventId", 20, "cookiedomain", null);
+                KnownUser.ExtendQueueCookie("eventId", 20, "cookiedomain", false, false, null);
             }
             catch (ArgumentException ex)
             {
@@ -429,20 +440,22 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             KnownUser._UserInQueueService = (mock);
 
             // Act
-            KnownUser.ExtendQueueCookie("eventId", 20, "cookiedomain", "secretKey");
+            KnownUser.ExtendQueueCookie("eventId", 20, "cookiedomain", true, true, "secretKey");
 
             // Assert
             Assert.Equal("eventId", mock.extendQueueCookieCalls[0][0]);
             Assert.Equal("20", mock.extendQueueCookieCalls[0][1]);
             Assert.Equal("cookiedomain", mock.extendQueueCookieCalls[0][2]);
-            Assert.Equal("secretKey", mock.extendQueueCookieCalls[0][3]);
+            Assert.True(bool.Parse(mock.extendQueueCookieCalls[0][3]));
+            Assert.True(bool.Parse(mock.extendQueueCookieCalls[0][4]));
+            Assert.Equal("secretKey", mock.extendQueueCookieCalls[0][5]);
         }
 
         [Fact]
         public void ResolveQueueRequestByLocalConfig_NullCustomerId_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -467,7 +480,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ResolveQueueRequestByLocalConfig_NullSecretKey_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -515,7 +528,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ResolveRequestByLocalEventConfigNullEventIdTest()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -551,7 +564,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ResolveRequestByLocalEventConfig_NullQueueDomain_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -587,7 +600,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ResolveQueueRequestByLocalConfig_InvalidCookieValidityMinute_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -622,7 +635,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ResolveRequestByLocalEventConfig_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -653,10 +666,9 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ResolveRequestByLocalEventConfig_AjaxCall_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock()
+            var httpContextMock = new HttpContextMock
             {
-                HttpRequest = new MockHttpRequest()
-                { Headers = new NameValueCollection() { { "x-queueit-ajaxpageurl", "http%3A%2F%2Furl" } } }
+                HttpRequest = new MockHttpRequest { Headers = new NameValueCollection { { "x-queueit-ajaxpageurl", "http%3A%2F%2Furl" } } }
             };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
@@ -687,7 +699,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         [Fact]
         public void ValidateRequestByIntegrationConfig_EmptyCurrentUrl_Test()
         {
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             // Arrange        
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
@@ -713,7 +725,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ValidateRequestByIntegrationConfig_EmptyIntegrationsConfig_Test()
         {
             // Arrange 
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -778,10 +790,10 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             CustomerIntegration customerIntegration = new CustomerIntegration();
             customerIntegration.Integrations = new IntegrationConfigModel[] { config };
             customerIntegration.Version = 3;
-            var httpContextMock = new HttpContextMock()
+            var httpContextMock = new HttpContextMock
             {
                 HttpRequest =
-                new MockHttpRequest()
+                new MockHttpRequest
                 {
                     UserAgent = "googlebot",
                     Headers = new NameValueCollection()
@@ -847,14 +859,14 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             customerIntegration.Integrations = new IntegrationConfigModel[] { config };
             customerIntegration.Version = 3;
 
-            var httpContextMock = new HttpContextMock()
+            var httpContextMock = new HttpContextMock
             {
                 HttpRequest =
-                new MockHttpRequest()
+                new MockHttpRequest
                 {
                     UserAgent = "googlebot",
 
-                    Headers = new NameValueCollection() { { "x-queueit-ajaxpageurl", "http%3A%2F%2Furl" } }
+                    Headers = new NameValueCollection { { "x-queueit-ajaxpageurl", "http%3A%2F%2Furl" } }
                 }
             };
             KnownUser._HttpContextProvider = httpContextMock;
@@ -877,7 +889,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ValidateRequestByIntegrationConfig_NotMatch_Test()
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -901,7 +913,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ValidateRequestByIntegrationConfig_RedirectLogic_Test(string redirectLogic, string forcedTargetUrl)
         {
             // Arrange
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -973,7 +985,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             customerIntegration.Integrations = new IntegrationConfigModel[] { config };
             customerIntegration.Version = 3;
 
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -1015,11 +1027,11 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             customerIntegration.Integrations = new IntegrationConfigModel[] { config };
             customerIntegration.Version = 3;
 
-            var httpContextMock = new HttpContextMock()
+            var httpContextMock = new HttpContextMock
             {
-                HttpRequest = new MockHttpRequest()
+                HttpRequest = new MockHttpRequest
                 {
-                    Headers = new NameValueCollection() { { "x-queueit-ajaxpageurl", "url" } }
+                    Headers = new NameValueCollection { { "x-queueit-ajaxpageurl", "url" } }
                 }
             };
             KnownUser._HttpContextProvider = httpContextMock;
@@ -1063,7 +1075,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             customerIntegration.Integrations = new IntegrationConfigModel[] { config };
             customerIntegration.Version = 3;
 
-            var httpContextMock = new HttpContextMock() { };
+            var httpContextMock = new HttpContextMock { };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -1105,11 +1117,11 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             customerIntegration.Integrations = new IntegrationConfigModel[] { config };
             customerIntegration.Version = 3;
 
-            var httpContextMock = new HttpContextMock()
+            var httpContextMock = new HttpContextMock
             {
-                HttpRequest = new MockHttpRequest()
+                HttpRequest = new MockHttpRequest
                 {
-                    Headers = new NameValueCollection() { { "x-queueit-ajaxpageurl", "http%3A%2F%2Furl" } }
+                    Headers = new NameValueCollection { { "x-queueit-ajaxpageurl", "http%3A%2F%2Furl" } }
                 }
             };
             KnownUser._HttpContextProvider = httpContextMock;
@@ -1137,11 +1149,12 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             string xForwardedHostHeader = "en.wikipedia.org:8080";
             string xForwardedProtoHeader = "https";
             var mockResponse = new MockHttpResponse();
-            var httpContextMock = new HttpContextMock()
+            var httpContextMock = new HttpContextMock
             {
-                HttpRequest = new MockHttpRequest()
+                HttpRequest = new MockHttpRequest
                 {
-                    Headers = new NameValueCollection() {
+                    Headers = new NameValueCollection
+                    {
                         { "Via", viaHeader },
                         { "Forwarded", forwardedHeader },
                         { "X-Forwarded-For", xForwardedForHeader },
@@ -1175,6 +1188,8 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             //config.ActionType = "Queue";
             config.EventId = "event1";
             config.CookieDomain = ".test.com";
+            config.IsCookieHttpOnly = false;
+            config.IsCookieSecure = false;
             config.LayoutName = "Christmas Layout by Queue-it";
             config.Culture = "da-DK";
             config.ExtendCookieValidity = true;
@@ -1198,13 +1213,23 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
 
             // Assert
             var cookieValues = HttpUtility.UrlDecode(mockResponse.CookiesValue["queueitdebug"]["cookieValue"].ToString()).Split('|');
-            Assert.True(cookieValues.Any(v => v == $"PureUrl=http://test.com?event1=true"));
-            Assert.True(cookieValues.Any(v => v == $"ConfigVersion=3"));
-            Assert.True(cookieValues.Any(v => v == $"MatchedConfig=event1action"));
-            Assert.True(cookieValues.Any(v => v == $"QueueitToken={queueitToken}"));
-            Assert.True(cookieValues.Any(v => v == $"OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue"));
-            Assert.True(cookieValues.Any(v => v == $"TargetUrl=http://test.com?event1=true"));
-            Assert.True(cookieValues.Any(v => v == $"QueueConfig=EventId:event1&Version:3&QueueDomain:knownusertest.queue-it.net&CookieDomain:.test.com&ExtendCookieValidity:True&CookieValidityMinute:20&LayoutName:Christmas Layout by Queue-it&Culture:da-DK&ActionName:event1action"));
+            Assert.Contains(cookieValues, v => v == "PureUrl=http://test.com?event1=true");
+            Assert.Contains(cookieValues, v => v == "ConfigVersion=3");
+            Assert.Contains(cookieValues, v => v == "MatchedConfig=event1action");
+            Assert.Contains(cookieValues, v => v == $"QueueitToken={queueitToken}");
+            Assert.Contains(cookieValues, v => v == "OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue");
+            Assert.Contains(cookieValues, v => v == "TargetUrl=http://test.com?event1=true");
+            Assert.Contains(cookieValues, v => v == "QueueConfig=" +
+                "EventId:event1" +
+                "&Version:3" +
+                "&QueueDomain:knownusertest.queue-it.net" +
+                "&CookieDomain:.test.com" +
+                "&IsCookieHttpOnly:False" +
+                "&IsCookieSecure:False" +
+                "&ExtendCookieValidity:True" +
+                "&CookieValidityMinute:20" +
+                "&LayoutName:Christmas Layout by Queue-it" +
+                "&Culture:da-DK&ActionName:event1action");
 
             AssertRequestCookieContent(cookieValues,
                 UserInQueueService.SDK_VERSION, KnownUser.GetRuntime(), utcTimeBeforeActionWasPerformed, requestIP, viaHeader, forwardedHeader, xForwardedForHeader, xForwardedHostHeader, xForwardedProtoHeader);
@@ -1221,11 +1246,12 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             string xForwardedHostHeader = "en.wikipedia.org:8080";
             string xForwardedProtoHeader = "https";
             var fakeHttpResponse = new MockHttpResponse();
-            var httpContextMock = new HttpContextMock()
+            var httpContextMock = new HttpContextMock
             {
-                HttpRequest = new MockHttpRequest()
+                HttpRequest = new MockHttpRequest
                 {
-                    Headers = new NameValueCollection() {
+                    Headers = new NameValueCollection
+                    {
                         { "Via", viaHeader },
                         { "Forwarded", forwardedHeader },
                         { "X-Forwarded-For", xForwardedForHeader },
@@ -1279,11 +1305,12 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             string xForwardedHostHeader = "en.wikipedia.org:8080";
             string xForwardedProtoHeader = "https";
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock()
+            KnownUser._HttpContextProvider = new HttpContextMock
             {
-                HttpRequest = new MockHttpRequest()
+                HttpRequest = new MockHttpRequest
                 {
-                    Headers = new NameValueCollection() {
+                    Headers = new NameValueCollection
+                    {
                         { "Via", viaHeader },
                         { "Forwarded", forwardedHeader },
                         { "X-Forwarded-For", xForwardedForHeader },
@@ -1324,7 +1351,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ValidateRequestByIntegrationConfig_Debug_Missing_CustomerId()
         {
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock() { HttpResponse = mockResponse };
+            KnownUser._HttpContextProvider = new HttpContextMock { HttpResponse = mockResponse };
             CustomerIntegration customerIntegration = new CustomerIntegration();
 
             var expiredDebugToken = QueueITTokenGenerator.GenerateToken(
@@ -1340,7 +1367,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ValidateRequestByIntegrationConfig_Debug_Missing_Secretkey()
         {
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock() { HttpResponse = mockResponse };
+            KnownUser._HttpContextProvider = new HttpContextMock { HttpResponse = mockResponse };
             CustomerIntegration customerIntegration = new CustomerIntegration();
 
             var expiredDebugToken = QueueITTokenGenerator.GenerateToken(
@@ -1356,7 +1383,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ValidateRequestByIntegrationConfig_Debug_ExpiredToken()
         {
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock() { HttpResponse = mockResponse };
+            KnownUser._HttpContextProvider = new HttpContextMock { HttpResponse = mockResponse };
             CustomerIntegration customerIntegration = new CustomerIntegration();
 
             var expiredDebugToken = QueueITTokenGenerator.GenerateToken(
@@ -1372,7 +1399,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ValidateRequestByIntegrationConfig_Debug_ModifiedToken()
         {
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock() { HttpResponse = mockResponse };
+            KnownUser._HttpContextProvider = new HttpContextMock { HttpResponse = mockResponse };
             CustomerIntegration customerIntegration = new CustomerIntegration();
 
             var invalidDebugToken = QueueITTokenGenerator.GenerateToken(
@@ -1397,11 +1424,12 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             string xForwardedHostHeader = "en.wikipedia.org:8080";
             string xForwardedProtoHeader = "https";
 
-            var httpContextMock = new HttpContextMock()
+            var httpContextMock = new HttpContextMock
             {
-                HttpRequest = new MockHttpRequest()
+                HttpRequest = new MockHttpRequest
                 {
-                    Headers = new NameValueCollection() {
+                    Headers = new NameValueCollection
+                    {
                         { "Via", viaHeader },
                         { "Forwarded", forwardedHeader },
                         { "X-Forwarded-For", xForwardedForHeader },
@@ -1419,13 +1447,15 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             KnownUser._UserInQueueService = (mock);
 
             QueueEventConfig eventConfig = new QueueEventConfig();
-            eventConfig.CookieDomain = "cookieDomain";
+            eventConfig.EventId = "eventId";
             eventConfig.LayoutName = "layoutName";
             eventConfig.Culture = "culture";
-            eventConfig.EventId = "eventId";
             eventConfig.QueueDomain = "queueDomain";
             eventConfig.ExtendCookieValidity = true;
             eventConfig.CookieValidityMinute = 10;
+            eventConfig.CookieDomain = "cookieDomain";
+            eventConfig.IsCookieHttpOnly = false;
+            eventConfig.IsCookieSecure = false;
             eventConfig.Version = 12;
             eventConfig.ActionName = "QueueAction";
 
@@ -1439,10 +1469,21 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
 
             // Assert
             var cookieValues = HttpUtility.UrlDecode(fakeHttpResponse.CookiesValue["queueitdebug"]["cookieValue"].ToString()).Split('|');
-            Assert.True(cookieValues.Any(v => v == $"QueueitToken={queueitToken}"));
-            Assert.True(cookieValues.Any(v => v == $"OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue"));
-            Assert.True(cookieValues.Any(v => v == $"TargetUrl=http://test.com?event1=true"));
-            Assert.True(cookieValues.Any(v => v == $"QueueConfig=EventId:eventId&Version:12&QueueDomain:queueDomain&CookieDomain:cookieDomain&ExtendCookieValidity:True&CookieValidityMinute:10&LayoutName:layoutName&Culture:culture&ActionName:{eventConfig.ActionName}"));
+            Assert.Contains(cookieValues, v => v == $"QueueitToken={queueitToken}");
+            Assert.Contains(cookieValues, v => v == "OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue");
+            Assert.Contains(cookieValues, v => v == "TargetUrl=http://test.com?event1=true");
+            Assert.Contains(cookieValues, v => v == "QueueConfig=" +
+                "EventId:eventId" +
+                "&Version:12" +
+                "&QueueDomain:queueDomain" +
+                "&CookieDomain:cookieDomain" +
+                "&IsCookieHttpOnly:False" +
+                "&IsCookieSecure:False" +
+                "&ExtendCookieValidity:True" +
+                "&CookieValidityMinute:10" +
+                "&LayoutName:layoutName" +
+                "&Culture:culture" +
+                $"&ActionName:{eventConfig.ActionName}");
 
             AssertRequestCookieContent(cookieValues,
                 UserInQueueService.SDK_VERSION, KnownUser.GetRuntime(), utcTimeBeforeActionWasPerformed, requestIP, viaHeader, forwardedHeader, xForwardedForHeader, xForwardedHostHeader, xForwardedProtoHeader);
@@ -1460,11 +1501,12 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             string xForwardedHostHeader = "en.wikipedia.org:8080";
             string xForwardedProtoHeader = "https";
 
-            KnownUser._HttpContextProvider = new HttpContextMock()
+            KnownUser._HttpContextProvider = new HttpContextMock
             {
-                HttpRequest = new MockHttpRequest()
+                HttpRequest = new MockHttpRequest
                 {
-                    Headers = new NameValueCollection() {
+                    Headers = new NameValueCollection
+                    {
                         { "Via", viaHeader },
                         { "Forwarded", forwardedHeader },
                         { "X-Forwarded-For", xForwardedForHeader },
@@ -1504,7 +1546,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ResolveQueueRequestByLocalConfig_Debug_Missing_CustomerId()
         {
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock() { HttpResponse = mockResponse };
+            KnownUser._HttpContextProvider = new HttpContextMock { HttpResponse = mockResponse };
             QueueEventConfig eventConfig = new QueueEventConfig();
 
             var expiredDebugToken = QueueITTokenGenerator.GenerateToken(
@@ -1520,7 +1562,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ResolveQueueRequestByLocalConfig_Debug_Missing_SecretKey()
         {
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock() { HttpResponse = mockResponse };
+            KnownUser._HttpContextProvider = new HttpContextMock { HttpResponse = mockResponse };
             QueueEventConfig eventConfig = new QueueEventConfig();
 
             var expiredDebugToken = QueueITTokenGenerator.GenerateToken(
@@ -1536,7 +1578,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ResolveQueueRequestByLocalConfig_Debug_ExpiredToken()
         {
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock() { HttpResponse = mockResponse };
+            KnownUser._HttpContextProvider = new HttpContextMock { HttpResponse = mockResponse };
             QueueEventConfig eventConfig = new QueueEventConfig();
 
             var expiredDebugToken = QueueITTokenGenerator.GenerateToken(
@@ -1552,7 +1594,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void ResolveQueueRequestByLocalConfig_Debug_ModifiedToken()
         {
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock() { HttpResponse = mockResponse };
+            KnownUser._HttpContextProvider = new HttpContextMock { HttpResponse = mockResponse };
             QueueEventConfig eventConfig = new QueueEventConfig();
 
             var invalidDebugToken = QueueITTokenGenerator.GenerateToken(
@@ -1577,11 +1619,12 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             string xForwardedHostHeader = "en.wikipedia.org:8080";
             string xForwardedProtoHeader = "https";
 
-            var httpContextMock = new HttpContextMock()
+            var httpContextMock = new HttpContextMock
             {
-                HttpRequest = new MockHttpRequest()
+                HttpRequest = new MockHttpRequest
                 {
-                    Headers = new NameValueCollection() {
+                    Headers = new NameValueCollection
+                    {
                         { "Via", viaHeader },
                         { "Forwarded", forwardedHeader },
                         { "X-Forwarded-For", xForwardedForHeader },
@@ -1599,10 +1642,12 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             KnownUser._UserInQueueService = (mock);
 
             CancelEventConfig eventConfig = new CancelEventConfig();
-            eventConfig.CookieDomain = "cookieDomain";
             eventConfig.EventId = "eventId";
             eventConfig.QueueDomain = "queueDomain";
             eventConfig.Version = 12;
+            eventConfig.CookieDomain = "cookieDomain";
+            eventConfig.IsCookieHttpOnly = false;
+            eventConfig.IsCookieSecure = false;
             eventConfig.ActionName = "CancelAction";
 
             var queueitToken = QueueITTokenGenerator.GenerateToken(
@@ -1615,10 +1660,17 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
 
             // Assert
             var cookieValues = HttpUtility.UrlDecode(fakeHttpResponse.CookiesValue["queueitdebug"]["cookieValue"].ToString()).Split('|');
-            Assert.True(cookieValues.Any(v => v == $"QueueitToken={queueitToken}"));
-            Assert.True(cookieValues.Any(v => v == $"OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue"));
-            Assert.True(cookieValues.Any(v => v == $"TargetUrl=http://test.com?event1=true"));
-            Assert.True(cookieValues.Any(v => v == $"CancelConfig=EventId:eventId&Version:12&QueueDomain:queueDomain&CookieDomain:cookieDomain&ActionName:{eventConfig.ActionName}"));
+            Assert.Contains(cookieValues, v => v == $"QueueitToken={queueitToken}");
+            Assert.Contains(cookieValues, v => v == "OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue");
+            Assert.Contains(cookieValues, v => v == "TargetUrl=http://test.com?event1=true");
+            Assert.Contains(cookieValues, v => v == "CancelConfig=" +
+                "EventId:eventId" +
+                "&Version:12" +
+                "&QueueDomain:queueDomain" +
+                "&CookieDomain:cookieDomain" +
+                "&IsCookieHttpOnly:False" +
+                "&IsCookieSecure:False" +
+                $"&ActionName:{eventConfig.ActionName}");
 
             AssertRequestCookieContent(cookieValues,
                 UserInQueueService.SDK_VERSION, KnownUser.GetRuntime(), utcTimeBeforeActionWasPerformed, requestIP, viaHeader, forwardedHeader, xForwardedForHeader, xForwardedHostHeader, xForwardedProtoHeader);
@@ -1636,11 +1688,12 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             string xForwardedHostHeader = "en.wikipedia.org:8080";
             string xForwardedProtoHeader = "https";
 
-            KnownUser._HttpContextProvider = new HttpContextMock()
+            KnownUser._HttpContextProvider = new HttpContextMock
             {
-                HttpRequest = new MockHttpRequest()
+                HttpRequest = new MockHttpRequest
                 {
-                    Headers = new NameValueCollection() {
+                    Headers = new NameValueCollection
+                    {
                         { "Via", viaHeader },
                         { "Forwarded", forwardedHeader },
                         { "X-Forwarded-For", xForwardedForHeader },
@@ -1679,7 +1732,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void CancelRequestByLocalConfig_Debug_Missing_CustomerId()
         {
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock() { HttpResponse = mockResponse };
+            KnownUser._HttpContextProvider = new HttpContextMock { HttpResponse = mockResponse };
             CancelEventConfig eventConfig = new CancelEventConfig();
 
             var token = QueueITTokenGenerator.GenerateToken(
@@ -1695,7 +1748,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void CancelRequestByLocalConfig_Debug_Missing_SecretKey()
         {
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock() { HttpResponse = mockResponse };
+            KnownUser._HttpContextProvider = new HttpContextMock { HttpResponse = mockResponse };
             CancelEventConfig eventConfig = new CancelEventConfig();
 
             var token = QueueITTokenGenerator.GenerateToken(
@@ -1711,7 +1764,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void CancelRequestByLocalConfig_Debug_ExpiredToken()
         {
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock() { HttpResponse = mockResponse };
+            KnownUser._HttpContextProvider = new HttpContextMock { HttpResponse = mockResponse };
             CancelEventConfig eventConfig = new CancelEventConfig();
 
             var expiredDebugToken = QueueITTokenGenerator.GenerateToken(
@@ -1727,7 +1780,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         public void CancelRequestByLocalConfig_Debug_ModifiedToken()
         {
             var mockResponse = new MockHttpResponse();
-            KnownUser._HttpContextProvider = new HttpContextMock() { HttpResponse = mockResponse };
+            KnownUser._HttpContextProvider = new HttpContextMock { HttpResponse = mockResponse };
             CancelEventConfig eventConfig = new CancelEventConfig();
 
             var invalidDebugToken = QueueITTokenGenerator.GenerateToken(
@@ -1785,10 +1838,10 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
             customerIntegration.Integrations = new IntegrationConfigModel[] { config };
             customerIntegration.Version = 3;
             var mockResponse = new MockHttpResponse();
-            var httpContextMock = new HttpContextMock()
+            var httpContextMock = new HttpContextMock
             {
                 HttpRequest =
-                new MockHttpRequest()
+                new MockHttpRequest
                 {
                     UserAgent = "googlebot",
                     Headers = new NameValueCollection()
@@ -1816,7 +1869,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         {
             // Arrange
             var mockResponse = new MockHttpResponse();
-            var httpContextMock = new HttpContextMock() { HttpResponse = mockResponse };
+            var httpContextMock = new HttpContextMock { HttpResponse = mockResponse };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -1852,11 +1905,11 @@ namespace QueueIT.KnownUser.V3.AspNetCore.Tests
         {
             // Arrange
             var mockResponse = new MockHttpResponse();
-            var httpContextMock = new HttpContextMock() { HttpResponse = mockResponse };
+            var httpContextMock = new HttpContextMock { HttpResponse = mockResponse };
             KnownUser._HttpContextProvider = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
-            var cancelEventConfig = new CancelEventConfig() { CookieDomain = "cookiedomain", EventId = "eventid", QueueDomain = "queuedomain", Version = 1, ActionName = "CancelAction" };
+            var cancelEventConfig = new CancelEventConfig { CookieDomain = "cookiedomain", EventId = "eventid", QueueDomain = "queuedomain", Version = 1, ActionName = "CancelAction" };
             // Act
             mock.validateCancelRequestRaiseException = true;
             try

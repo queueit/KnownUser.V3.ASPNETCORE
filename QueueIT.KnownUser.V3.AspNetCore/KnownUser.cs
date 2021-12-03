@@ -9,19 +9,19 @@ using System.Web;
 
 namespace QueueIT.KnownUser.V3.AspNetCore
 {
-    #region Internals
-    internal interface IHttpRequest
+    public interface IHttpRequest
     {
         string UserAgent { get; }
         NameValueCollection Headers { get; }
         Uri Url { get; }
         string UserHostAddress { get; }
         string GetCookieValue(string cookieKey);
+        string GetRequestBodyAsString();
     }
 
     internal interface IHttpResponse
     {
-        void SetCookie(string cookieName, string cookieValue, string domain, DateTime expiration);
+        void SetCookie(string cookieName, string cookieValue, string domain, DateTime expiration, bool isCookieHttpOnly, bool isCookieSecure);
     }
 
     internal interface IHttpContextProvider
@@ -35,7 +35,6 @@ namespace QueueIT.KnownUser.V3.AspNetCore
             get;
         }
     }
-    #endregion
 
     public static class KnownUser
     {
@@ -240,6 +239,8 @@ namespace QueueIT.KnownUser.V3.AspNetCore
             string eventId,
             int cookieValidityMinute,
             string cookieDomain,
+            bool isCookieHttpOnly,
+            bool isCookieSecure,
             string secretKey)
         {
             if (string.IsNullOrEmpty(eventId))
@@ -250,7 +251,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore
                 throw new ArgumentException("secretKey can not be null or empty.");
 
             var userInQueueService = GetUserInQueueService();
-            userInQueueService.ExtendQueueCookie(eventId, cookieValidityMinute, cookieDomain, secretKey);
+            userInQueueService.ExtendQueueCookie(eventId, cookieValidityMinute, cookieDomain, isCookieHttpOnly, isCookieSecure, secretKey);
         }
 
         internal static IHttpContextProvider _HttpContextProvider;
@@ -282,7 +283,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore
                 cookieValue += $"{nameVal.Key}={nameVal.Value}|";
 
             cookieValue = cookieValue.TrimEnd('|');
-            GetHttpContextProvider().HttpResponse.SetCookie(QueueITDebugKey, cookieValue, null, DateTime.UtcNow.AddMinutes(20));
+            GetHttpContextProvider().HttpResponse.SetCookie(QueueITDebugKey, cookieValue, null, DateTime.UtcNow.AddMinutes(20), false, false);
         }
 
         private static void LogExtraRequestDetails(Dictionary<string, string> debugEntries)
@@ -297,10 +298,14 @@ namespace QueueIT.KnownUser.V3.AspNetCore
         }
 
         private static RequestValidationResult HandleQueueAction(
-            string currentUrlWithoutQueueITToken, string queueitToken,
-            CustomerIntegration customerIntegrationInfo, string customerId,
-            string secretKey, Dictionary<string, string> debugEntries,
-            IntegrationConfigModel matchedConfig, bool isDebug)
+            string currentUrlWithoutQueueITToken, 
+            string queueitToken,
+            CustomerIntegration customerIntegrationInfo, 
+            string customerId,
+            string secretKey, 
+            Dictionary<string, string> debugEntries,
+            IntegrationConfigModel matchedConfig,
+            bool isDebug)
         {
             var targetUrl = "";
             switch (matchedConfig.RedirectLogic)
@@ -317,7 +322,7 @@ namespace QueueIT.KnownUser.V3.AspNetCore
                     break;
             }
 
-            var queueEventConfig = new QueueEventConfig()
+            var queueEventConfig = new QueueEventConfig
             {
                 QueueDomain = matchedConfig.QueueDomain,
                 Culture = matchedConfig.Culture,
@@ -326,6 +331,8 @@ namespace QueueIT.KnownUser.V3.AspNetCore
                 LayoutName = matchedConfig.LayoutName,
                 CookieValidityMinute = matchedConfig.CookieValidityMinute.Value,
                 CookieDomain = matchedConfig.CookieDomain,
+                IsCookieHttpOnly = matchedConfig.IsCookieHttpOnly ?? false,
+                IsCookieSecure = matchedConfig.IsCookieSecure ?? false,
                 Version = customerIntegrationInfo.Version,
                 ActionName = matchedConfig.Name
             };
@@ -339,12 +346,14 @@ namespace QueueIT.KnownUser.V3.AspNetCore
             string secretKey, Dictionary<string, string> debugEntries,
             IntegrationConfigModel matchedConfig, bool isDebug)
         {
-            var cancelEventConfig = new CancelEventConfig()
+            var cancelEventConfig = new CancelEventConfig
             {
                 QueueDomain = matchedConfig.QueueDomain,
                 EventId = matchedConfig.EventId,
                 Version = customerIntegrationInfo.Version,
                 CookieDomain = matchedConfig.CookieDomain,
+                IsCookieHttpOnly = matchedConfig.IsCookieHttpOnly ?? false,
+                IsCookieSecure = matchedConfig.IsCookieSecure ?? false,
                 ActionName = matchedConfig.Name
             };
             return CancelRequestByLocalConfig(currentUrlWithoutQueueITToken, queueitToken, cancelEventConfig, customerId, secretKey, debugEntries, isDebug);
@@ -384,14 +393,14 @@ namespace QueueIT.KnownUser.V3.AspNetCore
                     .GetCustomAttribute<TargetFrameworkAttribute>();
 
                 if (att == null)
-                return "not-specified";
+                    return "not-specified";
 
                 return att.FrameworkName;
             }
             catch
             {
                 return "unknown";
-            }           
+            }
         }
     }
 }
